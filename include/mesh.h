@@ -5,6 +5,7 @@ class Mesh
 {
 public:
     Mesh(const std::vector<float>& vertices, const std::vector<unsigned int>& indices);
+    Mesh(const Mesh&) = delete;
     ~Mesh();
 
     void make_vao(const unsigned int attribute, const unsigned int format,

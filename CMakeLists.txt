@@ -11,6 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Dependencies
 add_subdirectory(lib/glfw)
 add_subdirectory(lib/glm)
+add_definitions(-DGLM_FORCE_SILENT_WARNINGS)
 
 # Add files
 file(GLOB SOURCES src/*.cpp lib/glad/src/glad.c)

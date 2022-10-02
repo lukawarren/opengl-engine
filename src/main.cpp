@@ -1,6 +1,7 @@
 #include "window.h"
 #include <iostream>
 #include "mesh.h"
+#include "shader.h"
 
 int main()
 {
@@ -17,6 +18,8 @@ int main()
 
     Window window("nameless", 640, 480);
     Mesh mesh(vertices, indices);
+    Shader shader("basic");
+    shader.bind();
 
     while (window.update())
     {
