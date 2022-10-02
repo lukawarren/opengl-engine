@@ -1,7 +1,30 @@
 #include "mesh.h"
 #include <glad/glad.h>
 
-Mesh::Mesh(const std::vector<float>& vertices, const std::vector<unsigned int>& indices)
+const std::vector<float> quad_vertices =
+{
+     0.5f,  0.5f, 0.0f,
+     0.5f, -0.5f, 0.0f,
+    -0.5f, -0.5f, 0.0f,
+    -0.5f,  0.5f, 0.0f
+};
+
+const std::vector<unsigned int> quad_indices =
+{
+    0, 1, 3,
+    1, 2, 3
+};
+
+const std::vector<float> quad_texture_coords =
+{
+    1.0f, -1.0f,
+    1.0f,  0.0f,
+    0.0f,  0.0f,
+    0.0f, -1.0f
+};
+
+Mesh::Mesh(const std::vector<float>& vertices, const std::vector<unsigned int>& indices,
+    const std::vector<float> texture_coords)
 {
     // Create and bind VAO
     glGenVertexArrays(1, &vao);
@@ -12,12 +35,18 @@ Mesh::Mesh(const std::vector<float>& vertices, const std::vector<unsigned int>& 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), &indices[0], GL_STATIC_DRAW);
 
-    // Make VAO for vertices (repeat as need be for texture coords, tangents, etc.)
+    // Make VAOs
     make_vao(0, GL_FLOAT, 3, vertices);
+    make_vao(1, GL_FLOAT, 2, texture_coords);
 
     // Unbind VAO but *not* EBO (as this is bound by the VAO for us)
     glBindVertexArray(0);
     this->indices = indices.size();
+}
+
+Mesh Mesh::quad()
+{
+    return Mesh(quad_vertices, quad_indices, quad_texture_coords);
 }
 
 void Mesh::make_vao(const unsigned int attribute, const unsigned int format,

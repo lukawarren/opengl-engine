@@ -2,22 +2,14 @@
 #include <iostream>
 #include "mesh.h"
 #include "shader.h"
+#include "texture.h"
 
 int main()
 {
-    std::vector<float> vertices = {
-         0.5f,  0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f,
-        -0.5f,  0.5f, 0.0f
-    };
-    std::vector<unsigned int> indices = {
-        0, 1, 3,
-        1, 2, 3
-    };
-
     Window window("nameless", 640, 480);
-    Mesh mesh(vertices, indices);
+    Texture texture("duck.jpg");
+    texture.bind();
+    Mesh mesh = Mesh::quad();
     Shader shader("basic");
     shader.bind();
 

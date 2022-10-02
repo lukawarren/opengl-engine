@@ -30,7 +30,8 @@ target_include_directories(${TARGET_NAME} PRIVATE
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_SOURCE_DIR}/lib/glfw/include"
     "${PROJECT_SOURCE_DIR}/lib/glm/include"
-    "${PROJECT_SOURCE_DIR}/lib/glad/include")
+    "${PROJECT_SOURCE_DIR}/lib/glad/include"
+    "${PROJECT_SOURCE_DIR}/lib/stb_image/")
 
 # C++ warnings and compiler flags
 if(MSVC)
