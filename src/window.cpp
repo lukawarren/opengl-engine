@@ -123,5 +123,5 @@ void Window::enable_debugging()
 
 Window::~Window()
 {
-
+    glfwTerminate();
 }
