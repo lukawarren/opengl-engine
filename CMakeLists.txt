@@ -12,6 +12,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_subdirectory(lib/glfw)
 add_subdirectory(lib/glm)
 add_definitions(-DGLM_FORCE_SILENT_WARNINGS)
+add_subdirectory(lib/assimp)
 
 # Add files
 file(GLOB SOURCES src/*.cpp lib/glad/src/glad.c)
@@ -41,4 +42,4 @@ else()
 endif()
 
 # Dependencies
-target_link_libraries(${TARGET_NAME} glfw glm)
+target_link_libraries(${TARGET_NAME} glfw glm assimp)
