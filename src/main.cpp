@@ -5,12 +5,12 @@
 #include "texture.h"
 #include <iostream>
 
-constexpr int width = 640;
-constexpr int height = 480;
+constexpr int width = 800;
+constexpr int height = 600;
 
 int main()
 {
-    Renderer renderer("New window", 800, 600);
+    Renderer renderer("New window", width, height);
     Texture texture("duck.jpg");
     texture.bind();
 

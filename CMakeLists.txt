@@ -15,6 +15,14 @@ if(LLD)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld")
 endif()
 
+# Reduce Assimp binary size and build times
+set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF)
+set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT OFF)
+set(ASSIMP_BUILD_OBJ_IMPORTER ON)
+set(ASSIMP_BUILD_SMD_IMPORTER ON)
+set(ASSIMP_BUILD_SIB_IMPORTER ON)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+
 # Dependencies
 add_subdirectory(lib/glfw)
 add_subdirectory(lib/glm)
