@@ -56,7 +56,6 @@ void Shader::unbind() const
     glUseProgram(0);
 }
 
-
 SHADER_UNIFORM(const glm::mat4& matrix) { glUniformMatrix4fv(NAME, 1, GL_FALSE, glm::value_ptr(matrix)); }
 SHADER_UNIFORM(const glm::vec3& vector) { glUniform3f(NAME, vector.x, vector.y, vector.z); }
 SHADER_UNIFORM(const glm::vec2& vector) { glUniform2f(NAME, vector.x, vector.y); }
@@ -74,6 +73,19 @@ void Shader::handle_error(auto f, auto f2, const unsigned int id,
         f2(id, 512, NULL, info);
         throw std::runtime_error(filename + ": " + error + "\n" + info);
     }
+}
+
+int Shader::get_uniform_location(const std::string& name)
+{
+    // Use cached version...
+    if (uniforms.contains(name))
+        return uniforms.at(name);
+
+    // ...or get from OpenGL then store for later
+    int result = glGetUniformLocation(program, name.c_str());
+    //if (result < 0) throw std::runtime_error("failed to create uniform " + name);
+    uniforms.emplace(name, result);
+    return result;
 }
 
 Shader::~Shader()
