@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
@@ -12,6 +13,8 @@ public:
 
     int width;
     int height;
+    int framebuffer_width;
+    int framebuffer_height;
 
 private:
     void init_glfw(const std::string& name);

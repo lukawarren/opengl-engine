@@ -36,3 +36,9 @@ private:
     unsigned int program;
     std::unordered_map<std::string, int> uniforms;
 };
+
+class DiffuseShader : public Shader
+{
+public:
+    DiffuseShader() : Shader("diffuse") {}
+};

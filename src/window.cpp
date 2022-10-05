@@ -41,9 +41,12 @@ void Window::init_glfw(const std::string& name)
     window = glfwCreateWindow(width, height, name.c_str(), NULL, NULL);
     if (!window) throw std::runtime_error("unable to create GLFW window");
 
-    // Bind window to OpenGL context and disable vsync
+    // Get *framebuffer* size (may differ on retina displays, etc.)
+    glfwGetFramebufferSize( window, &framebuffer_width, &framebuffer_height);
+
+    // Bind window to OpenGL context and enable vsync
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(0);
+    glfwSwapInterval(1);
 }
 
 void Window::init_glad()

@@ -1,3 +1,4 @@
+#pragma once
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -32,7 +33,6 @@ public:
         return glm::perspective(fov, width / height, z_near, z_far);
     }
 
-private:
     glm::vec3 position = {};
     float pitch = 0.0f;
     float yaw = 0.0f;

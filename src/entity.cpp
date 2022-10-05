@@ -32,7 +32,7 @@ Entity::Entity(const std::string& filename)
             const auto meshIndex = node->mMeshes[i];
             const aiMesh* mesh = scene->mMeshes[meshIndex];
             meshes.push_back(
-                mesh_from_assimp(mesh)
+                std::shared_ptr<Mesh>(mesh_from_assimp(mesh))
             );
         }
 
@@ -83,4 +83,10 @@ static Mesh* mesh_from_assimp(const aiMesh* assimp_mesh)
     }
 
     return new Mesh(vertices, indices, texture_coords);
+}
+
+Entity::~Entity()
+{
+    //for (auto mesh : meshes)
+    //    delete mesh;
 }
