@@ -1,5 +1,6 @@
 #include "mesh.h"
 #include <glad/glad.h>
+#include <stdexcept>
 
 const std::vector<float> quad_vertices =
 {
@@ -23,8 +24,11 @@ const std::vector<float> quad_texture_coords =
     0.0f, -1.0f
 };
 
-Mesh::Mesh(const std::vector<float>& vertices, const std::vector<unsigned int>& indices,
-    const std::vector<float> texture_coords)
+Mesh::Mesh(
+    const std::vector<float>& vertices,
+    const std::vector<unsigned int>& indices,
+    const std::vector<float> texture_coords
+)
 {
     // Create and bind VAO
     glGenVertexArrays(1, &vao);
@@ -49,8 +53,12 @@ Mesh Mesh::quad()
     return Mesh(quad_vertices, quad_indices, quad_texture_coords);
 }
 
-void Mesh::make_vao(const unsigned int attribute, const unsigned int format,
-    const unsigned int dimensions, const std::vector<float>& data)
+void Mesh::make_vao(
+    const unsigned int attribute,
+    const unsigned int format,
+    const unsigned int dimensions,
+    const std::vector<float>& data
+)
 {
     // Make and fill VBO
     unsigned int vbo;
