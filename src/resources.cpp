@@ -20,13 +20,7 @@ std::vector<TexturedMesh> load_assimp_scene(const std::string& filename)
     Assimp::Importer importer;
     std::vector<TexturedMesh> textured_meshes;
 
-    const auto flags =
-        aiProcess_Triangulate |
-        aiProcess_OptimizeMeshes |
-        aiProcess_OptimizeGraph |
-        aiProcess_JoinIdenticalVertices |
-        aiProcess_FlipUVs |
-        aiProcess_CalcTangentSpace;
+    const auto flags = aiProcess_Triangulate | aiProcess_FlipUVs;
 
     // Load entire scene from disk
     const aiScene* scene = importer.ReadFile("../res/assets/" + filename, flags);
