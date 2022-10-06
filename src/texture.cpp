@@ -8,7 +8,7 @@ Texture::Texture(const std::string& filename)
 {
     // Load from disk
     int width, height, channels;
-    unsigned char* data = stbi_load(("../res/textures/" + filename).c_str(), &width, &height, &channels, 0);
+    unsigned char* data = stbi_load(("../res/assets/" + filename).c_str(), &width, &height, &channels, 0);
     if (!data) throw std::runtime_error("failed to load texture " + filename);
 
     // Create and bind texture

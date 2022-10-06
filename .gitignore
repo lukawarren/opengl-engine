@@ -3,3 +3,4 @@ build/
 .idea
 cmake-build-debug/
 res/textures/duck.png
+res/assets/sponza/

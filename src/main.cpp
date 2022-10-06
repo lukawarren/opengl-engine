@@ -13,8 +13,12 @@ int main()
     Renderer renderer("New window", width, height);
 
     std::vector<Entity> entities = {
-        Entity("cube.obj", "duck.jpg"),
+        Entity("cube.obj"),
+        Entity("sponza/sponza.gltf"),
     };
+
+    entities[1].transform.scale = glm::vec3(0.1f);
+    entities[1].transform.position.y = -10;
 
     Camera camera({ 0.0f, 1.5f, 4.0f }, 10.0f, 0.0f, 0.0f);
 
@@ -23,6 +27,7 @@ int main()
         camera.position.z = std::cos(t += 0.01f) * 10 + 10;
         entities[0].transform.scale.x += 0.001f;
         entities[0].transform.rotation.y += 0.1f;
+        entities[1].transform.rotation.y += 0.1f;
     }
 
     return 0;

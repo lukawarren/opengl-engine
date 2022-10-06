@@ -9,6 +9,8 @@ class Renderer
 {
 public:
     Renderer(const std::string& title, const int width, const int height);
+    ~Renderer();
+
     bool update(const std::vector<Entity>& entities, const Camera& camera);
 
 private:

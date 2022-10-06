@@ -1,4 +1,5 @@
 #include "renderer.h"
+#include "resources.h"
 #include <iostream>
 
 Renderer::Renderer(const std::string& title, const int width, const int height) :
@@ -31,16 +32,19 @@ bool Renderer::update(const std::vector<Entity>& entities, const Camera& camera)
     for (const auto& entity : entities)
     {
         diffuse_shader.set_uniform("model", entity.transform.matrix());
-        entity.texture->bind();
 
-        for (const auto& mesh : entity.meshes)
+        for (const auto& mesh : entity.textured_meshes)
         {
-            mesh->bind();
-            mesh->draw();
+            mesh.texture->bind();
+            mesh.mesh->bind();
+            mesh.mesh->draw();
         }
     }
 
     return true;
 }
 
-
+Renderer::~Renderer()
+{
+    free_resources();
+}

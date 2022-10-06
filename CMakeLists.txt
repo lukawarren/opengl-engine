@@ -21,6 +21,7 @@ set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT OFF)
 set(ASSIMP_BUILD_OBJ_IMPORTER ON)
 set(ASSIMP_BUILD_SMD_IMPORTER ON)
 set(ASSIMP_BUILD_SIB_IMPORTER ON)
+set(ASSIMP_BUILD_GLTF_IMPORTER ON)
 set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
 
 # Dependencies
@@ -53,7 +54,7 @@ target_include_directories(${TARGET_NAME} PRIVATE
 if(MSVC)
     target_compile_options(${TARGET_NAME} PUBLIC /W4 /Wv:18)
 else()
-    target_compile_options(${TARGET_NAME} PRIVATE -O3 -Wall -Wextra -pedantic -fdiagnostics-color=always)
+    target_compile_options(${TARGET_NAME} PRIVATE -O3 -g -Wall -Wextra -pedantic -fdiagnostics-color=always)
 endif()
 
 # Dependencies
