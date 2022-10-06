@@ -30,6 +30,8 @@ bool Renderer::update(const std::vector<Entity>& entities, const Camera& camera)
     // TODO: minimise state changes by ordering by mesh, texture, shader, etc.
     for (const auto& entity : entities)
     {
+        entity.texture->bind();
+
         for (const auto& mesh : entity.meshes)
         {
             mesh->bind();

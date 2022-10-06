@@ -7,7 +7,7 @@
 
 static Mesh* mesh_from_assimp(const aiMesh* assimp_mesh);
 
-Entity::Entity(const std::string& filename)
+Entity::Entity(const std::string& filename, const std::string& texture)
 {
     Assimp::Importer importer;
 
@@ -42,6 +42,7 @@ Entity::Entity(const std::string& filename)
     };
 
     load_node(scene->mRootNode);
+    this->texture = std::make_shared<Texture>(texture);
 }
 
 static Mesh* mesh_from_assimp(const aiMesh* assimp_mesh)
@@ -85,8 +86,4 @@ static Mesh* mesh_from_assimp(const aiMesh* assimp_mesh)
     return new Mesh(vertices, indices, texture_coords);
 }
 
-Entity::~Entity()
-{
-    //for (auto mesh : meshes)
-    //    delete mesh;
-}
+Entity::~Entity() {}

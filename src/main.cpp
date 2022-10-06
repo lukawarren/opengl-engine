@@ -11,12 +11,9 @@ constexpr int height = 600;
 int main()
 {
     Renderer renderer("New window", width, height);
-    Texture texture("duck.jpg");
-    texture.bind();
 
     std::vector<Entity> entities = {
-        Entity("cube.obj"),
-        Entity("cube.obj")
+        Entity("cube.obj", "duck.jpg"),
     };
 
     Camera camera({ 0.0f, 1.5f, 4.0f }, 10.0f, 0.0f, 0.0f);

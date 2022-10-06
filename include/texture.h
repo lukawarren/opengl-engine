@@ -1,7 +1,8 @@
 #pragma once
 #include <string>
+#include "resource.h"
 
-class Texture
+class Texture : GLResource
 {
 public:
     Texture(const std::string& filename);
