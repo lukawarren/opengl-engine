@@ -21,6 +21,8 @@ int main()
     float t = 0.0f;
     while (renderer.update(entities, camera)) {
         camera.position.z = std::cos(t += 0.01f) * 10 + 10;
+        entities[0].transform.scale.x += 0.001f;
+        entities[0].transform.rotation.y += 0.1f;
     }
 
     return 0;

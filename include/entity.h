@@ -1,6 +1,7 @@
 #pragma once
 #include "mesh.h"
 #include "texture.h"
+#include "transform.h"
 #include <vector>
 #include <string>
 #include <memory>
@@ -16,4 +17,5 @@ public:
     // NOTE: right now pointers are used to solve copy constructor woes.
     std::vector<std::shared_ptr<Mesh>> meshes;
     std::shared_ptr<Texture> texture;
+    Transform transform = {};
 };
