@@ -42,3 +42,9 @@ class DiffuseShader : public Shader
 public:
     DiffuseShader() : Shader("diffuse") {}
 };
+
+class WaterShader : public Shader
+{
+public:
+    WaterShader() : Shader("water") {}
+};

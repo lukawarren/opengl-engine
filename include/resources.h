@@ -10,6 +10,10 @@ struct TexturedMesh
     Texture* texture;
 };
 
+void init_resources();
+void free_resources();
+
 std::vector<TexturedMesh> load_assimp_scene(const std::string& filename);
 Texture* texture(const std::string& filename);
-void free_resources();
+
+extern Mesh* quad_mesh;

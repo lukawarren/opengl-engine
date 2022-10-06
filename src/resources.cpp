@@ -15,6 +15,13 @@ static std::unordered_map<std::string, Texture*> textures;
 static Mesh* mesh_from_assimp(const aiMesh* assimp_mesh, const std::string& id);
 static Texture* texture_from_assimp(const aiMaterial* material, const std::string& path);
 
+Mesh* quad_mesh;
+
+void init_resources()
+{
+    quad_mesh = Mesh::quad();
+}
+
 std::vector<TexturedMesh> load_assimp_scene(const std::string& filename)
 {
     Assimp::Importer importer;
@@ -129,4 +136,5 @@ void free_resources()
 {
     for(auto& mesh : meshes) delete mesh.second;
     for(auto& texture : textures) delete texture.second;
+    delete quad_mesh;
 }

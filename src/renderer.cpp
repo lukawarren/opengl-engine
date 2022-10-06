@@ -6,29 +6,34 @@ Renderer::Renderer(const std::string& title, const int width, const int height) 
     window(title, width, height)
 {
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+    //glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glViewport(0, 0, window.framebuffer_width, window.framebuffer_height);
-
-    diffuse_shader.bind();
+    init_resources();
 }
 
-bool Renderer::update(const std::vector<Entity>& entities, const Camera& camera)
+bool Renderer::update(const std::vector<Entity>& entities,
+    const std::vector<Water>& waters, const Camera& camera)
 {
     // Update window; poll events
     if (!window.update()) return false;
 
     // Update uniforms
-    diffuse_shader.set_uniform("view", camera.view_matrix());
-    diffuse_shader.set_uniform("projection", camera.projection_matrix(
-        window.framebuffer_width,
-        window.framebuffer_height
-    ));
+    for (auto shader : shaders)
+    {
+        shader->bind();
+        shader->set_uniform("view", camera.view_matrix());
+        shader->set_uniform("projection", camera.projection_matrix(
+            window.framebuffer_width,
+            window.framebuffer_height
+        ));
+    }
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-    // TODO: minimise state changes by ordering by mesh, texture, shader, etc.
+    //TODO: minimise state changes by ordering by mesh, texture, shader, etc.
+    diffuse_shader.bind();
     for (const auto& entity : entities)
     {
         diffuse_shader.set_uniform("model", entity.transform.matrix());
@@ -39,6 +44,14 @@ bool Renderer::update(const std::vector<Entity>& entities, const Camera& camera)
             mesh.mesh->bind();
             mesh.mesh->draw();
         }
+    }
+
+    water_shader.bind();
+    quad_mesh->bind();
+    for (const auto& water : waters)
+    {
+        water_shader.set_uniform("model", water.transform.matrix());
+        quad_mesh->draw();
     }
 
     return true;

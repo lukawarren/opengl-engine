@@ -13,7 +13,7 @@ public:
     Mesh(const Mesh&) = delete;
     ~Mesh();
 
-    static Mesh quad();
+    static Mesh* quad();
 
     void bind() const;
     void unbind() const;

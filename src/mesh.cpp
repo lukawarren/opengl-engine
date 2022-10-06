@@ -48,9 +48,9 @@ Mesh::Mesh(
     this->indices = indices.size();
 }
 
-Mesh Mesh::quad()
+Mesh* Mesh::quad()
 {
-    return Mesh(quad_vertices, quad_indices, quad_texture_coords);
+    return new Mesh(quad_vertices, quad_indices, quad_texture_coords);
 }
 
 void Mesh::make_vao(
