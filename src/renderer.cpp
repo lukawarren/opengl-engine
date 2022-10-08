@@ -3,10 +3,11 @@
 #include <iostream>
 
 Renderer::Renderer(const std::string& title, const int width, const int height) :
-    window(title, width, height)
+    window(title, width, height),
+    framebuffer(width, height)
 {
     glEnable(GL_DEPTH_TEST);
-    //glEnable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glViewport(0, 0, window.framebuffer_width, window.framebuffer_height);
     init_resources();
@@ -29,6 +30,7 @@ bool Renderer::update(const std::vector<Entity>& entities,
         ));
     }
 
+    framebuffer.bind();
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
@@ -45,9 +47,13 @@ bool Renderer::update(const std::vector<Entity>& entities,
             mesh.mesh->draw();
         }
     }
+    framebuffer.unbind();
 
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
     water_shader.bind();
     quad_mesh->bind();
+    framebuffer.colour_texture.bind();
     for (const auto& water : waters)
     {
         water_shader.set_uniform("model", water.transform.matrix());

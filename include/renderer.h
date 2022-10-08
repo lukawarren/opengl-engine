@@ -4,6 +4,7 @@
 #include "entity.h"
 #include "camera.h"
 #include "water.h"
+#include "framebuffer.h"
 #include <string>
 #include <array>
 
@@ -22,4 +23,6 @@ private:
     DiffuseShader diffuse_shader;
     WaterShader water_shader;
     std::array<Shader*, 2> shaders = { &diffuse_shader, &water_shader };
+
+    Framebuffer framebuffer;
 };
