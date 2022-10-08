@@ -49,3 +49,9 @@ class WaterShader : public Shader
 public:
     WaterShader() : Shader("water") {}
 };
+
+class QuadShader : public Shader
+{
+public:
+    QuadShader() : Shader("quad") {}
+};

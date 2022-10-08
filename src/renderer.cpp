@@ -2,14 +2,18 @@
 #include "resources.h"
 #include <iostream>
 
-Renderer::Renderer(const std::string& title, const int width, const int height) :
-    window(title, width, height)
+Renderer::Renderer(const std::string& title, const int width, const int height, const float render_scale) :
+    window(title, width, height),
+    output_framebuffer(window.framebuffer_width * render_scale, window.framebuffer_height * render_scale)
 {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    glViewport(0, 0, window.framebuffer_width, window.framebuffer_height);
+    glViewport(0, 0, output_width(), output_height());
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
     init_resources();
+    this->render_scale = render_scale;
 }
 
 bool Renderer::update(const Scene& scene)
@@ -17,8 +21,22 @@ bool Renderer::update(const Scene& scene)
     // Update window; poll events
     if (!window.update()) return false;
 
-    diffuse_pass(scene, scene.camera, window.framebuffer_width, window.framebuffer_height);
+    // Render passes
+    output_framebuffer.bind();
+    diffuse_pass(scene, scene.camera, output_width(), output_height());
     water_pass(scene);
+    output_framebuffer.unbind();
+
+    // Display scaled output
+    glDisable(GL_CULL_FACE);
+        glViewport(0, 0, window.framebuffer_width, window.framebuffer_height);
+            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+            output_framebuffer.colour_texture.bind();
+            quad_shader.bind();
+            quad_mesh->bind();
+            quad_mesh->draw();
+        glViewport(0, 0, output_width(), output_height());
+    glEnable(GL_CULL_FACE);
 
     return true;
 }
@@ -39,7 +57,6 @@ void Renderer::diffuse_pass(
     if (clip_plane.has_value())
         diffuse_shader.set_uniform("clip_plane", clip_plane.value());
 
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
     // TODO: sort by least-expensive state-change
@@ -74,8 +91,8 @@ void Renderer::water_pass(const Scene& scene)
         diffuse_pass(
             scene,
             water.reflection_camera(scene.camera),
-            window.framebuffer_width,
-            window.framebuffer_height,
+            output_width(),
+            output_height(),
             glm::vec4 (0, 1, 0, -water.transform.position.y)
         );
     }
@@ -93,24 +110,24 @@ void Renderer::water_pass(const Scene& scene)
         diffuse_pass(
             scene,
             scene.camera,
-            window.framebuffer_width,
-            window.framebuffer_height,
+            output_width(),
+            output_height(),
             glm::vec4 (0, -1, 0, water.transform.position.y)
         );
     }
     glDisable(GL_CLIP_DISTANCE0);
 
     // Reset rendering state
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, window.framebuffer_width, window.framebuffer_height);
+    output_framebuffer.bind();
+    glViewport(0, 0, output_width(), output_height());
     quad_mesh->bind();
 
     // Set uniforms
     water_shader.bind();
     water_shader.set_uniform("view", scene.camera.view_matrix());
     water_shader.set_uniform("projection", scene.camera.projection_matrix(
-        window.framebuffer_width,
-        window.framebuffer_height
+        output_width(),
+        output_height()
     ));
 
     // Render water
@@ -123,6 +140,16 @@ void Renderer::water_pass(const Scene& scene)
         water.refraction_buffer->colour_texture.bind(1);
         quad_mesh->draw();
     }
+}
+
+unsigned int Renderer::output_width() const
+{
+    return window.framebuffer_width * render_scale;
+}
+
+unsigned int Renderer::output_height() const
+{
+    return window.framebuffer_height * render_scale;
 }
 
 Renderer::~Renderer()
