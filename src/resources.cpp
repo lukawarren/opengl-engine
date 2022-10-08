@@ -106,7 +106,7 @@ static Mesh* mesh_from_assimp(const aiMesh* assimp_mesh, const std::string& id)
     }
 
     // Cache for later then return
-    Mesh* mesh = new Mesh(vertices, indices, texture_coords);
+    Mesh* mesh = new Mesh(vertices, indices, texture_coords, normals);
     meshes.emplace(id, mesh);
     return mesh;
 }

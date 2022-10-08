@@ -11,6 +11,8 @@ uniform float time;
 
 layout (location = 0) out vec4 frag_colour;
 
+const float energy_loss = 0.8;
+
 void main()
 {
     // Apply du/dv (distortion) texture multiple times
@@ -26,5 +28,8 @@ void main()
 
     // Fresnel
     float fresnel = dot(normalize(out_to_camera), vec3(0, 1, 0));
-    frag_colour = mix(reflection, refraction, fresnel);
+
+    // Water doesn't reflect 100% of light :)
+    vec4 loss = vec4(energy_loss, energy_loss, energy_loss, 1.0);
+    frag_colour = mix(reflection, refraction, fresnel) * loss;
 }

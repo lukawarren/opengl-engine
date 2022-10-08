@@ -27,7 +27,8 @@ const std::vector<float> quad_texture_coords =
 Mesh::Mesh(
     const std::vector<float>& vertices,
     const std::vector<unsigned int>& indices,
-    const std::vector<float> texture_coords
+    const std::vector<float>& texture_coords,
+    const std::optional<std::vector<float>>& normals
 )
 {
     // Create and bind VAO
@@ -42,6 +43,8 @@ Mesh::Mesh(
     // Make VAOs
     make_vao(0, GL_FLOAT, 3, vertices);
     make_vao(1, GL_FLOAT, 2, texture_coords);
+    if (normals.has_value())
+        make_vao(2, GL_FLOAT, 3, normals.value());
 
     // Unbind VAO but *not* EBO (as this is bound by the VAO for us)
     glBindVertexArray(0);
