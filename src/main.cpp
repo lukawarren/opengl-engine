@@ -42,6 +42,7 @@ int main()
         if (window.get_mouse_button(GLFW_MOUSE_BUTTON_LEFT))
         {
             window.capture_mouse();
+            mouse_position = window.mouse_position();
             captured = true;
         }
 
