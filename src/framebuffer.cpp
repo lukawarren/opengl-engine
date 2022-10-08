@@ -34,6 +34,8 @@ Framebuffer::Framebuffer(const unsigned int width, const unsigned int height) :
         throw std::runtime_error("incomplete framebuffer");
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    this->width = width;
+    this->height = height;
 }
 
 void Framebuffer::bind() const

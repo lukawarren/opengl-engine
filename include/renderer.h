@@ -1,10 +1,7 @@
 #pragma once
 #include "window.h"
 #include "shader.h"
-#include "entity.h"
-#include "camera.h"
-#include "water.h"
-#include "framebuffer.h"
+#include "scene.h"
 #include <string>
 #include <array>
 
@@ -14,15 +11,14 @@ public:
     Renderer(const std::string& title, const int width, const int height);
     ~Renderer();
 
-    bool update(const std::vector<Entity>& entities, const std::vector<Water>& waters,
-        const Camera& camera);
+    bool update(const Scene& scene);
 
 private:
-    Window window;
 
+    void diffuse_pass(const Scene& scene, const Camera& camera, const unsigned int width, const unsigned int height);
+    void water_pass(const Scene& scene);
+
+    Window window;
     DiffuseShader diffuse_shader;
     WaterShader water_shader;
-    std::array<Shader*, 2> shaders = { &diffuse_shader, &water_shader };
-
-    Framebuffer framebuffer;
 };

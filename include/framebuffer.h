@@ -11,6 +11,8 @@ public:
     void bind() const;
     void unbind() const;
 
+    unsigned int width;
+    unsigned int height;
     Texture colour_texture;
 
 private:

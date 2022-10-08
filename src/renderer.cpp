@@ -3,8 +3,7 @@
 #include <iostream>
 
 Renderer::Renderer(const std::string& title, const int width, const int height) :
-    window(title, width, height),
-    framebuffer(width, height)
+    window(title, width, height)
 {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -13,30 +12,29 @@ Renderer::Renderer(const std::string& title, const int width, const int height) 
     init_resources();
 }
 
-bool Renderer::update(const std::vector<Entity>& entities,
-    const std::vector<Water>& waters, const Camera& camera)
+bool Renderer::update(const Scene& scene)
 {
     // Update window; poll events
     if (!window.update()) return false;
 
-    // Update uniforms
-    for (auto shader : shaders)
-    {
-        shader->bind();
-        shader->set_uniform("view", camera.view_matrix());
-        shader->set_uniform("projection", camera.projection_matrix(
-            window.framebuffer_width,
-            window.framebuffer_height
-        ));
-    }
+    diffuse_pass(scene, scene.camera, window.framebuffer_width, window.framebuffer_height);
+    water_pass(scene);
 
-    framebuffer.bind();
+    return true;
+}
+
+void Renderer::diffuse_pass(const Scene& scene, const Camera& camera, const unsigned int width, const unsigned int height)
+{
+    // Update uniforms
+    diffuse_shader.bind();
+    diffuse_shader.set_uniform("view", camera.view_matrix());
+    diffuse_shader.set_uniform("projection", camera.projection_matrix(width, height));
+
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-    //TODO: minimise state changes by ordering by mesh, texture, shader, etc.
-    diffuse_shader.bind();
-    for (const auto& entity : entities)
+    // TODO: sort by least-expensive state-change
+    for (const auto& entity : scene.entities)
     {
         diffuse_shader.set_uniform("model", entity.transform.matrix());
 
@@ -47,20 +45,44 @@ bool Renderer::update(const std::vector<Entity>& entities,
             mesh.mesh->draw();
         }
     }
-    framebuffer.unbind();
+}
 
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-    water_shader.bind();
-    quad_mesh->bind();
-    framebuffer.colour_texture.bind();
-    for (const auto& water : waters)
+void Renderer::water_pass(const Scene& scene)
+{
+    // Reflections: render scene normally, but to water FBOs
+    for (const auto& water : scene.waters)
     {
-        water_shader.set_uniform("model", water.transform.matrix());
-        quad_mesh->draw();
+        const auto buffer = water.reflection_buffer;
+        buffer->bind();
+        glViewport(0, 0, buffer->width, buffer->height);
+        diffuse_pass(
+            scene,
+            water.reflection_camera(),
+            buffer->width,
+            buffer->height
+        );
     }
 
-    return true;
+    // Reset rendering state
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, window.framebuffer_width, window.framebuffer_height);
+    quad_mesh->bind();
+
+    // Set uniforms
+    water_shader.bind();
+    water_shader.set_uniform("view", scene.camera.view_matrix());
+    water_shader.set_uniform("projection", scene.camera.projection_matrix(
+        window.framebuffer_width,
+        window.framebuffer_height
+    ));
+
+    // Render water
+    for (const auto& water : scene.waters)
+    {
+        water_shader.set_uniform("model", water.transform.matrix());
+        water.reflection_buffer->colour_texture.bind();
+        quad_mesh->draw();
+    }
 }
 
 Renderer::~Renderer()
