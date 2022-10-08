@@ -2,6 +2,7 @@
 #include <string>
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 class Window
 {
@@ -10,6 +11,13 @@ public:
     ~Window();
 
     bool update();
+
+    bool get_key(int key) const;
+    bool get_mouse_button(int button) const;
+    glm::vec2 mouse_position() const;
+
+    void capture_mouse() const;
+    void uncapture_mouse() const;
 
     int width;
     int height;

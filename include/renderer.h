@@ -13,12 +13,12 @@ public:
 
     bool update(const Scene& scene);
 
-private:
+    Window window;
 
+private:
     void diffuse_pass(const Scene& scene, const Camera& camera, const unsigned int width, const unsigned int height);
     void water_pass(const Scene& scene);
 
-    Window window;
     DiffuseShader diffuse_shader;
     WaterShader water_shader;
 };

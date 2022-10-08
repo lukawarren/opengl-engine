@@ -23,6 +23,33 @@ bool Window::update()
     return !glfwWindowShouldClose(window);
 }
 
+bool Window::get_key(int key) const
+{
+    return glfwGetKey(window, key) == GLFW_PRESS;
+}
+
+bool Window::get_mouse_button(int button) const
+{
+    return glfwGetMouseButton(window, button) == GLFW_PRESS;
+}
+
+glm::vec2 Window::mouse_position() const
+{
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+    return { x, y };
+}
+
+void Window::capture_mouse() const
+{
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
+
+void Window::uncapture_mouse() const
+{
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}
+
 void Window::init_glfw(const std::string& name)
 {
     // Init OpenGL core (>= 4.3 for debugging output)
