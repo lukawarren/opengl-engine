@@ -54,12 +54,16 @@ void Renderer::water_pass(const Scene& scene)
     {
         const auto buffer = water.reflection_buffer;
         buffer->bind();
+
+        // Use FBO size for viewport...
         glViewport(0, 0, buffer->width, buffer->height);
+
+        // ...but window size for projection matrix!
         diffuse_pass(
             scene,
-            water.reflection_camera(),
-            buffer->width,
-            buffer->height
+            water.reflection_camera(scene.camera),
+            window.framebuffer_width,
+            window.framebuffer_height
         );
     }
 
