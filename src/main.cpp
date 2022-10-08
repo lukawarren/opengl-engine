@@ -12,7 +12,7 @@ int main()
     {
         .entities = { Entity("sponza/sponza.gltf") },
         .waters = { Water() },
-        .camera = Camera({ 0.0f, 1.5f, 4.0f }, 10.0f, 0.0f, 0.0f)
+        .camera = Camera({ 0.0f, 5.5f, 4.0f }, 10.0f, 0.0f, 0.0f)
     };
 
     auto* sponza = &scene.entities[0];
@@ -27,7 +27,6 @@ int main()
     while (renderer.update(scene))
     {
         camera->position.z = std::cos(t += 0.01f) * 10 + 10;
-        //sponza->transform.rotation.y += 0.1f;
     }
 
     return 0;

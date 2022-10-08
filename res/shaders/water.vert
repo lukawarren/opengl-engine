@@ -7,10 +7,10 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-out vec2 out_texture_coord;
+out vec4 out_clip_space;
 
 void main()
 {
-    gl_Position = projection * view * model * vec4(pos, 1.0);
-    out_texture_coord = texture_coord;
+    out_clip_space = projection * view * model * vec4(pos, 1.0);;
+    gl_Position = out_clip_space;
 }
