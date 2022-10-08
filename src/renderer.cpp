@@ -23,12 +23,21 @@ bool Renderer::update(const Scene& scene)
     return true;
 }
 
-void Renderer::diffuse_pass(const Scene& scene, const Camera& camera, const unsigned int width, const unsigned int height)
+void Renderer::diffuse_pass(
+    const Scene& scene,
+    const Camera& camera,
+    const unsigned int width,
+    const unsigned int height,
+    const std::optional<glm::vec4> clip_plane)
 {
-    // Update uniforms
+    // Update uniforms...
     diffuse_shader.bind();
     diffuse_shader.set_uniform("view", camera.view_matrix());
     diffuse_shader.set_uniform("projection", camera.projection_matrix(width, height));
+
+    // ...including clip planes (for planar reflections)
+    if (clip_plane.has_value())
+        diffuse_shader.set_uniform("clip_plane", clip_plane.value());
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
@@ -50,6 +59,9 @@ void Renderer::diffuse_pass(const Scene& scene, const Camera& camera, const unsi
 void Renderer::water_pass(const Scene& scene)
 {
     // Reflections: render scene normally, but to water FBOs
+    // NOTE: clipping is used so that we can render from behind
+    // the plane, but not have "behind geometry" occluding us
+    glEnable(GL_CLIP_DISTANCE0);
     for (const auto& water : scene.waters)
     {
         const auto buffer = water.reflection_buffer;
@@ -63,9 +75,11 @@ void Renderer::water_pass(const Scene& scene)
             scene,
             water.reflection_camera(scene.camera),
             window.framebuffer_width,
-            window.framebuffer_height
+            window.framebuffer_height,
+            glm::vec4 (0, 1, 0, -water.transform.position.y)
         );
     }
+    glDisable(GL_CLIP_DISTANCE0);
 
     // Reset rendering state
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

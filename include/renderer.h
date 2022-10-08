@@ -4,6 +4,7 @@
 #include "scene.h"
 #include <string>
 #include <array>
+#include <optional>
 
 class Renderer
 {
@@ -16,7 +17,12 @@ public:
     Window window;
 
 private:
-    void diffuse_pass(const Scene& scene, const Camera& camera, const unsigned int width, const unsigned int height);
+    void diffuse_pass(
+        const Scene& scene,
+        const Camera& camera,
+        const unsigned int width,
+        const unsigned int height,
+        const std::optional<glm::vec4> clip_plane = {});
     void water_pass(const Scene& scene);
 
     DiffuseShader diffuse_shader;

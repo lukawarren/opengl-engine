@@ -20,6 +20,7 @@ public:
     void unbind() const;
 
     _SHADER_UNIFORM(const glm::mat4& matrix);
+    _SHADER_UNIFORM(const glm::vec4& vector);
     _SHADER_UNIFORM(const glm::vec3& vector);
     _SHADER_UNIFORM(const glm::vec2& vector);
     _SHADER_UNIFORM(const float value);
