@@ -1,6 +1,7 @@
 #pragma once
 #include "transform.h"
 #include "framebuffer.h"
+#include "resources.h"
 #include <memory>
 
 constexpr unsigned int texture_width = 1024;
@@ -17,6 +18,7 @@ public:
     {
         reflection_buffer = std::make_shared<Framebuffer>(texture_width, texture_height);
         refraction_buffer = std::make_shared<Framebuffer>(texture_width, texture_height);
+        distortion_map = get_texture("water/dudv.png");
     }
 
     // Computes where the camera should face to render a planar reflection
@@ -34,9 +36,16 @@ public:
         );
     }
 
+    void update()
+    {
+        time += 0.0008f;
+    }
+
     Transform transform;
+    float time = 0.0f;
 
     // To get around copy-constructor woes
     std::shared_ptr<Framebuffer> reflection_buffer;
     std::shared_ptr<Framebuffer> refraction_buffer;
+    Texture* distortion_map;
 };

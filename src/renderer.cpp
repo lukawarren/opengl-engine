@@ -6,11 +6,19 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     window(title, width, height),
     output_framebuffer(window.framebuffer_width * render_scale, window.framebuffer_height * render_scale)
 {
+    // Setup GL state
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glViewport(0, 0, output_width(), output_height());
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+    // Connect texture units
+    water_shader.bind();
+    water_shader.set_uniform("reflection_texture", 0);
+    water_shader.set_uniform("refraction_texture", 1);
+    water_shader.set_uniform("distortion_texture", 2);
+    water_shader.unbind();
 
     init_resources();
     this->render_scale = render_scale;
@@ -134,11 +142,11 @@ void Renderer::water_pass(const Scene& scene)
     // Render water
     for (const auto& water : scene.waters)
     {
+        water_shader.set_uniform("time", water.time);
         water_shader.set_uniform("model", water.transform.matrix());
-        water_shader.set_uniform("reflection_texture", 0);
-        water_shader.set_uniform("refraction_texture", 1);
         water.reflection_buffer->colour_texture.bind(0);
         water.refraction_buffer->colour_texture.bind(1);
+        water.distortion_map->bind(2);
         quad_mesh->draw();
     }
 }

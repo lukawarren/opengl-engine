@@ -84,7 +84,7 @@ int Shader::get_uniform_location(const std::string& name)
 
     // ...or get from OpenGL then store for later
     int result = glGetUniformLocation(program, name.c_str());
-    if (result < 0) throw std::runtime_error("failed to create uniform " + name);
+    if (result < 0) std::cout << "failed to create uniform "  << name << std::endl;
     uniforms.emplace(name, result);
     return result;
 }

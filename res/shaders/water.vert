@@ -10,6 +10,7 @@ uniform vec3 camera_position;
 
 out vec4 out_clip_space;
 out vec3 out_to_camera;
+out vec2 out_texture_coord;
 
 void main()
 {
@@ -17,4 +18,5 @@ void main()
     out_to_camera = camera_position - world_space.xyz;
     out_clip_space = projection * view * world_space;
     gl_Position = out_clip_space;
+    out_texture_coord = texture_coord * 30; // Tiling du/dv map
 }

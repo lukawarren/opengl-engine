@@ -1,16 +1,27 @@
 #version 330 core
 
+in vec2 out_texture_coord;
 in vec4 out_clip_space;
 in vec3 out_to_camera;
+
 uniform sampler2D reflection_texture;
 uniform sampler2D refraction_texture;
+uniform sampler2D distortion_texture;
+uniform float time;
+
 layout (location = 0) out vec4 frag_colour;
 
 void main()
 {
+    // Apply du/dv (distortion) texture multiple times
+    vec2 distortion1 = texture(distortion_texture, vec2(out_texture_coord.x + time, out_texture_coord.y)).xy * 2.0 - 1.0;
+    vec2 distortion2 = texture(distortion_texture, vec2(out_texture_coord.x, out_texture_coord.y - time)).xy * 2.0 - 1.0;
+    vec2 distortion = (distortion1 + distortion2) * 0.005;
+
     // Convert from clip space to "texture-coordinate space"
     vec2 ndc_space = (out_clip_space.xy / out_clip_space.w) / 2.0 + 0.5;
-    vec4 reflection = texture(reflection_texture, ndc_space * vec2(1.0, -1.0));
+    ndc_space += distortion;
+    vec4 reflection = texture(reflection_texture, vec2(ndc_space.x, 1 - ndc_space.y));
     vec4 refraction = texture(refraction_texture, ndc_space);
 
     // Fresnel

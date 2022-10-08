@@ -26,12 +26,16 @@ int main()
     auto* water = &scene.waters[0];
     auto* camera = &scene.camera;
 
-    sponza->transform.scale = glm::vec3(0.1f);
-    sponza->transform.position.y = -10;
-    water->transform.position.y = -1;
+    sponza->transform.scale = glm::vec3(0.01f);
+    sponza->transform.position.y = 4;
+    sponza->transform.position.z = 3;
+    water->transform.position.y = 5;
 
     while (renderer.update(scene))
     {
+        // Water waves
+        water->update();
+
         // Deal with mouse grabbinig
         if (window.get_key(GLFW_KEY_ESCAPE))
         {
@@ -49,19 +53,20 @@ int main()
         if (!captured) continue;
 
         // WASD
-        glm::vec3 speed = {};
-        if (window.get_key(GLFW_KEY_W)) speed.z += 1.0f;
-        if (window.get_key(GLFW_KEY_S)) speed.z -= 1.0f;
-        if (window.get_key(GLFW_KEY_A)) speed.x -= 1.0f;
-        if (window.get_key(GLFW_KEY_D)) speed.x += 1.0f;
+        const float speed = 0.04f;
+        glm::vec3 movement = {};
+        if (window.get_key(GLFW_KEY_W)) movement.z += 1.0f;
+        if (window.get_key(GLFW_KEY_S)) movement.z -= 1.0f;
+        if (window.get_key(GLFW_KEY_A)) movement.x -= 1.0f;
+        if (window.get_key(GLFW_KEY_D)) movement.x += 1.0f;
 
         // Apply relative to rotation
-        camera->position += glm::vec3 { sin(glm::radians(camera->yaw)), 0, -cos(glm::radians(camera->yaw)) } * speed.z * 1.0f;
-        camera->position += glm::vec3 { cos(glm::radians(camera->yaw)), 0,  sin(glm::radians(camera->yaw)) } * speed.x * 1.0f;
+        camera->position += glm::vec3 { sin(glm::radians(camera->yaw)), 0, -cos(glm::radians(camera->yaw)) } * movement.z * speed;
+        camera->position += glm::vec3 { cos(glm::radians(camera->yaw)), 0,  sin(glm::radians(camera->yaw)) } * movement.x * speed;
 
         // Vertical movement
-        if (window.get_key(GLFW_KEY_SPACE)) camera->position.y += 1.0f;
-        if (window.get_key(GLFW_KEY_LEFT_SHIFT)) camera->position.y -= 1.0f;
+        if (window.get_key(GLFW_KEY_SPACE)) camera->position.y += 1.0f * speed;
+        if (window.get_key(GLFW_KEY_LEFT_SHIFT)) camera->position.y -= 1.0f * speed;
 
         // Mouse
         glm::vec2 delta = window.mouse_position() - mouse_position;

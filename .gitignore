@@ -4,5 +4,6 @@ build/
 cmake-build-debug/
 res/textures/duck.png
 res/assets/sponza/
+res/assets/water/
 .DS_Store
 */.DS_Store

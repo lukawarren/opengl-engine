@@ -115,17 +115,17 @@ static Texture* texture_from_assimp(const aiMaterial* material, const std::strin
 {
     // Use missing texture if none exists
     if (material->GetTextureCount(aiTextureType_DIFFUSE) == 0)
-        return texture("missing_texture.png");
+        return get_texture("missing_texture.png");
 
     // Remove filename from path (so we're just left with directory)
     const std::string directory = path.substr(0, path.find_last_of('/')) + std::string("/");
 
     aiString filename;
     material->GetTexture(aiTextureType_DIFFUSE, 0, &filename);
-    return texture(directory + std::string(filename.C_Str()));
+    return get_texture(directory + std::string(filename.C_Str()));
 }
 
-Texture* texture(const std::string& filename)
+Texture* get_texture(const std::string& filename)
 {
     if (textures.contains(filename)) return textures[filename];
     auto iterator = textures.emplace(filename, new Texture(filename)).first;

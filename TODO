@@ -1,3 +1,2 @@
-* clipping planes
 * resizing windows
-* water doesn't need tex coords (yet)
+* delta tiime in water.h and FPS movement
