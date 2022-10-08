@@ -129,6 +129,7 @@ void Renderer::water_pass(const Scene& scene)
         output_width(),
         output_height()
     ));
+    water_shader.set_uniform("camera_position", scene.camera.position);
 
     // Render water
     for (const auto& water : scene.waters)

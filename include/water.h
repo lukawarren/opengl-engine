@@ -3,8 +3,8 @@
 #include "framebuffer.h"
 #include <memory>
 
-constexpr unsigned int texture_width = 256;
-constexpr unsigned int texture_height = 256;
+constexpr unsigned int texture_width = 1024;
+constexpr unsigned int texture_height = 1024;
 
 class Water
 {

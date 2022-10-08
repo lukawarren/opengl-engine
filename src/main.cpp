@@ -6,7 +6,7 @@ constexpr int height = 600;
 
 int main()
 {
-    Renderer renderer("New window", width, height, 0.4);
+    Renderer renderer("New window", width, height, 1);
     Window& window = renderer.window;
     window.capture_mouse();
 
