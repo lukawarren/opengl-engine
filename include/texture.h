@@ -12,7 +12,7 @@ public:
     Texture(const Texture&) = delete;
     ~Texture();
 
-    void bind() const;
+    void bind(const unsigned int unit = 0) const;
     void unbind() const;
 
     // OpenGL state

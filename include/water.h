@@ -15,10 +15,8 @@ public:
         { 100.0f, 100.0f, 100.0f }
     }) : transform(_transform)
     {
-        reflection_buffer = std::make_shared<Framebuffer>(
-            texture_width,
-            texture_height
-        );
+        reflection_buffer = std::make_shared<Framebuffer>(texture_width, texture_height);
+        refraction_buffer = std::make_shared<Framebuffer>(texture_width, texture_height);
     }
 
     // Computes where the camera should face to render a planar reflection
@@ -40,4 +38,5 @@ public:
 
     // To get around copy-constructor woes
     std::shared_ptr<Framebuffer> reflection_buffer;
+    std::shared_ptr<Framebuffer> refraction_buffer;
 };

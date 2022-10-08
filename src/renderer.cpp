@@ -79,6 +79,25 @@ void Renderer::water_pass(const Scene& scene)
             glm::vec4 (0, 1, 0, -water.transform.position.y)
         );
     }
+
+    // Refractions: much the same!
+    for (const auto& water : scene.waters)
+    {
+        const auto buffer = water.refraction_buffer;
+        buffer->bind();
+
+        // Use FBO size for viewport...
+        glViewport(0, 0, buffer->width, buffer->height);
+
+        // ...but window size for projection matrix!
+        diffuse_pass(
+            scene,
+            scene.camera,
+            window.framebuffer_width,
+            window.framebuffer_height,
+            glm::vec4 (0, -1, 0, water.transform.position.y)
+        );
+    }
     glDisable(GL_CLIP_DISTANCE0);
 
     // Reset rendering state
@@ -98,7 +117,10 @@ void Renderer::water_pass(const Scene& scene)
     for (const auto& water : scene.waters)
     {
         water_shader.set_uniform("model", water.transform.matrix());
-        water.reflection_buffer->colour_texture.bind();
+        water_shader.set_uniform("reflection_texture", 0);
+        water_shader.set_uniform("refraction_texture", 1);
+        water.reflection_buffer->colour_texture.bind(0);
+        water.refraction_buffer->colour_texture.bind(1);
         quad_mesh->draw();
     }
 }

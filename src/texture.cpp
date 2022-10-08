@@ -53,8 +53,9 @@ Texture::Texture(const unsigned int width, const unsigned int height)
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Texture::bind() const
+void Texture::bind(const unsigned int unit) const
 {
+    glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(GL_TEXTURE_2D, texture_id);
 }
 
