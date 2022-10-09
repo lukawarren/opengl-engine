@@ -68,8 +68,25 @@ void Window::init_glfw(const std::string& name)
     window = glfwCreateWindow(width, height, name.c_str(), NULL, NULL);
     if (!window) throw std::runtime_error("unable to create GLFW window");
 
+    // Get monitors...
+    int n_monitors;
+    GLFWmonitor** monitors = glfwGetMonitors(&n_monitors);
+    if (n_monitors == 0) throw std::runtime_error("no monitors found");
+
+    // ...get monitor resolution and position...
+    const GLFWvidmode* mode = glfwGetVideoMode(monitors[0]);
+    int monitor_x, monitor_y;
+    glfwGetMonitorPos(monitors[0], &monitor_x, &monitor_y);
+
+    // ...all to centre the window
+    glfwSetWindowPos(
+        window,
+        monitor_x + (mode->width - width) / 2,
+        monitor_y + (mode->height - height) / 2
+    );
+
     // Get *framebuffer* size (may differ on retina displays, etc.)
-    glfwGetFramebufferSize( window, &framebuffer_width, &framebuffer_height);
+    glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
 
     // Bind window to OpenGL context and enable vsync
     glfwMakeContextCurrent(window);
