@@ -17,7 +17,7 @@ public:
     }) : transform(_transform)
     {
         reflection_buffer = std::make_shared<Framebuffer>(texture_width, texture_height);
-        refraction_buffer = std::make_shared<Framebuffer>(texture_width, texture_height);
+        refraction_buffer = std::make_shared<Framebuffer>(texture_width, texture_height, true);
         distortion_map = get_texture("water/dudv.png");
     }
 
@@ -38,7 +38,7 @@ public:
 
     void update()
     {
-        time += 0.0008f;
+        time += 0.0008f / 2.0f;
     }
 
     Transform transform;

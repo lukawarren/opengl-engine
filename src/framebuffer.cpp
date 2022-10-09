@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include "framebuffer.h"
 
-Framebuffer::Framebuffer(const unsigned int width, const unsigned int height) :
+Framebuffer::Framebuffer(const unsigned int width, const unsigned int height, const bool depth_map) :
     colour_texture(width, height)
 {
     glGenFramebuffers(1, &fbo);
@@ -17,18 +17,35 @@ Framebuffer::Framebuffer(const unsigned int width, const unsigned int height) :
         0
     );
 
-    // Create renderbuffer for depth and stencil buffers, as we don't
-    // mean to read from them
-    glGenRenderbuffers(1, &rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-    glFramebufferRenderbuffer(
-        GL_FRAMEBUFFER,
-        GL_DEPTH_STENCIL_ATTACHMENT,
-        GL_RENDERBUFFER,
-        rbo
-    );
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    if (depth_map)
+    {
+        // Create depth buffer
+        this->depth_map.emplace(width, height, GL_DEPTH_COMPONENT, GL_FLOAT);
+        glFramebufferTexture2D(
+            GL_FRAMEBUFFER,
+            GL_DEPTH_ATTACHMENT,
+            GL_TEXTURE_2D,
+            this->depth_map->texture_id,
+            0
+        );
+    }
+    else
+    {
+        // Create renderbuffer for depth and stencil buffers, as we don't
+        // mean to read from them
+        unsigned int _rbo;
+        glGenRenderbuffers(1, &_rbo);
+        glBindRenderbuffer(GL_RENDERBUFFER, _rbo);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+        glFramebufferRenderbuffer(
+            GL_FRAMEBUFFER,
+            GL_DEPTH_STENCIL_ATTACHMENT,
+            GL_RENDERBUFFER,
+            _rbo
+        );
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        rbo.emplace(_rbo);
+    }
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         throw std::runtime_error("incomplete framebuffer");
@@ -50,6 +67,8 @@ void Framebuffer::unbind() const
 
 Framebuffer::~Framebuffer()
 {
-    glDeleteRenderbuffers(1, &rbo);
+    if (rbo.has_value())
+        glDeleteRenderbuffers(1, &rbo.value());
+
     glDeleteFramebuffers(1, &fbo);
 }

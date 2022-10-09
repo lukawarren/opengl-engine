@@ -1,8 +1,8 @@
 #include "renderer.h"
 #include <iostream>
 
-constexpr int width = 800;
-constexpr int height = 600;
+constexpr int width = 1600;
+constexpr int height = 900;
 
 int main()
 {
@@ -19,7 +19,7 @@ int main()
     {
         .entities = { Entity("sponza/sponza.gltf") },
         .waters = { Water() },
-        .camera = Camera({ 0.0f, 5.5f, 4.0f }, 10.0f, 0.0f, 0.0f)
+        .camera = Camera({ 0.0f, 10.5f, 4.0f }, 10.0f, 0.0f, 0.0f)
     };
 
     auto* sponza = &scene.entities[0];
@@ -29,7 +29,7 @@ int main()
     sponza->transform.scale = glm::vec3(0.01f);
     sponza->transform.position.y = 4;
     sponza->transform.position.z = 3;
-    water->transform.position.y = 5;
+    water->transform.position.y = 10;
 
     while (renderer.update(scene))
     {

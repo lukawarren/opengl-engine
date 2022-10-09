@@ -10,6 +10,8 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
+    glEnable(GL_BLEND);                                 // For water soft edges
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // For water soft edges
     glViewport(0, 0, output_width(), output_height());
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -17,7 +19,12 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     water_shader.bind();
     water_shader.set_uniform("reflection_texture", 0);
     water_shader.set_uniform("refraction_texture", 1);
-    water_shader.set_uniform("distortion_texture", 2);
+    water_shader.set_uniform("depth_map", 2);
+    water_shader.set_uniform("distortion_map", 3);
+
+    // Permanent uniforms
+    water_shader.set_uniform("z_near", z_near);
+    water_shader.set_uniform("z_far", z_far);
     water_shader.unbind();
 
     init_resources();
@@ -144,9 +151,13 @@ void Renderer::water_pass(const Scene& scene)
     {
         water_shader.set_uniform("time", water.time);
         water_shader.set_uniform("model", water.transform.matrix());
+
+        // Texture units
         water.reflection_buffer->colour_texture.bind(0);
         water.refraction_buffer->colour_texture.bind(1);
-        water.distortion_map->bind(2);
+        water.refraction_buffer->depth_map->bind(2);
+        water.distortion_map->bind(3);
+
         quad_mesh->draw();
     }
 }

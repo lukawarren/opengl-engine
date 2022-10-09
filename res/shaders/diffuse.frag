@@ -12,8 +12,8 @@ void main()
 {
     // Diffuse lighting
     vec3 normal = normalize(out_normal);
-    vec3 light_direction = normalize(vec3(10, 5, 3) - out_position);
-    float diffuse = max(dot(normal, light_direction), 0.0);
+    vec3 light_direction = normalize(vec3(0, 10, 0) - out_position);
+    float diffuse = max(dot(normal, light_direction), 0.0) * 1.3;
 
     frag_colour = texture(image, out_texture_coord) * vec4(diffuse, diffuse, diffuse, 1.0);
 }
