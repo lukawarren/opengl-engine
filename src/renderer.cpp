@@ -22,6 +22,7 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     water_shader.set_uniform("refraction_texture", 1);
     water_shader.set_uniform("depth_map", 2);
     water_shader.set_uniform("distortion_map", 3);
+    water_shader.set_uniform("normal_map", 4);
 
     // Permanent uniforms
     water_shader.set_uniform("z_near", z_near);
@@ -161,6 +162,7 @@ void Renderer::water_pass(const Scene& scene)
         water.refraction_buffer->colour_texture.bind(1);
         water.refraction_buffer->depth_map->bind(2);
         water.distortion_map->bind(3);
+        water.normal_map->bind(4);
 
         quad_mesh->draw();
     }

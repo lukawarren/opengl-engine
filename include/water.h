@@ -19,6 +19,7 @@ public:
         reflection_buffer = std::make_shared<Framebuffer>(texture_width, texture_height);
         refraction_buffer = std::make_shared<Framebuffer>(texture_width, texture_height, true);
         distortion_map = get_texture("water/dudv.png");
+        normal_map = get_texture("water/normal_map.png");
     }
 
     // Computes where the camera should face to render a planar reflection
@@ -48,4 +49,5 @@ public:
     std::shared_ptr<Framebuffer> reflection_buffer;
     std::shared_ptr<Framebuffer> refraction_buffer;
     Texture* distortion_map;
+    Texture* normal_map;
 };
