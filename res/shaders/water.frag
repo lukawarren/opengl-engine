@@ -15,11 +15,14 @@ uniform float time;
 
 layout (location = 0) out vec4 frag_colour;
 
-const float energy_loss = 0.8; // can be thought of as the water's "dirtiness"
-const vec4 colour = vec4(0.0/255.0, 167.0/255.0, 255.0/255.0, 1.0); // water base colour
-const float fog_factor = 20;
-const float max_fog_damper = 0.8; // higher = water can get darker
-const float waviness = 0.003;
+const float loss = 0.8;
+const float waviness = 0.002;
+const float fog = 0.2;
+
+float linearise_depth(float d)
+{
+    return z_near * z_far / (z_far + d * (z_near - z_far));
+}
 
 void main()
 {
@@ -33,8 +36,8 @@ void main()
 
     // Sample depth
     float depth = texture(depth_map, ndc_space).r;
-    float distance_to_floor = 2.0 * z_near * z_far / (z_far + z_near - (2.0 * depth - 1.0) * (z_far - z_near));
-    float distance_to_water = 2.0 * z_near * z_far / (z_far + z_near - (2.0 * gl_FragCoord.z - 1.0) * (z_far - z_near));
+    float distance_to_floor = linearise_depth(depth);
+    float distance_to_water = linearise_depth(gl_FragCoord.z);
     float water_depth = distance_to_floor - distance_to_water;
 
     // Apply distortion for reflection and refraction
@@ -42,19 +45,15 @@ void main()
     vec4 reflection = texture(reflection_texture, vec2(ndc_space.x, 1 - ndc_space.y));
     vec4 refraction = texture(refraction_texture, ndc_space);
 
-    // Use water depth to dull refractions (fog)
-    float loss = clamp(water_depth * fog_factor, 0, 1.0);
-    loss = clamp(loss, 0, max_fog_damper);
-    refraction *= (1-loss);
+    // Water fog
+    float fog = water_depth * fog;
+    refraction = mix(refraction, vec4(0,0,0,0), clamp(fog, 0.0, 0.8));
 
     // Fresnel - bias towards refraction
-    float fresnel = dot(normalize(out_to_camera), vec3(0, 1, 0));
-    fresnel = clamp(fresnel * 1.5, 0, 1);
-    frag_colour = mix(reflection, refraction, fresnel);
-
-    // Water doesn't reflect 100% of light :)
-    frag_colour = frag_colour * energy_loss * colour;
+    float fresnel = dot(normalize(out_to_camera), vec3(0, 1, 0)) + 0.3;
+    frag_colour = mix(reflection, refraction, clamp(fresnel, 0, 1));
+    frag_colour *= loss;
 
     // Make water transparent near edges to mask ugly seam
-    frag_colour.a = clamp(water_depth*2, 0, 1);
+    frag_colour.a = clamp(water_depth*3, 0, 1);
 }

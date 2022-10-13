@@ -13,7 +13,7 @@ public:
     Water(Transform _transform = {
         {},
         { 90.0f, 0.0f, 0.0f },
-        { 100.0f, 100.0f, 100.0f }
+        { 1.0f, 1.0f, 1.0f }
     }) : transform(_transform)
     {
         reflection_buffer = std::make_shared<Framebuffer>(texture_width, texture_height);

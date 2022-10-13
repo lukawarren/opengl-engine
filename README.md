@@ -2,7 +2,7 @@
 ```
 Debian / Ubuntu: sudo apt install xorg-dev libmesa-dev
 Fedora: sudo dnf install libXcursor-devel libXi-devel libXinerama-devel libXrandr-devel
-        sudo dnf install mesa-libGL-devel
+        sudo dnf install mesa-libGL-devel (maybe - todo: check)
 ```
 
 ## Included
