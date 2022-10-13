@@ -17,7 +17,7 @@ int main()
     // Seutp scene
     Scene scene =
     {
-        .entities = { Entity("sponza/sponza.gltf"), Entity("pool/pool.glb") },
+        .entities = { Entity("sponza/sponza.gltf"), Entity("pool/pool.glb"), Entity("cube.obj") },
         .waters = { Water() },
         .camera = Camera({ -6.0f, 3.5f, 0.0f }, 30.0f, 90.0f, 0.0f)
     };

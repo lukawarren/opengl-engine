@@ -10,10 +10,11 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    glEnable(GL_BLEND);                                 // For water soft edges
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // For water soft edges
     glViewport(0, 0, output_width(), output_height());
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+    // For water soft edges
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Connect texture units
     water_shader.bind();
@@ -149,6 +150,7 @@ void Renderer::water_pass(const Scene& scene)
     water_shader.set_uniform("camera_position", scene.camera.position);
 
     // Render water
+    glEnable(GL_BLEND);
     for (const auto& water : scene.waters)
     {
         water_shader.set_uniform("time", water.time);
@@ -162,6 +164,7 @@ void Renderer::water_pass(const Scene& scene)
 
         quad_mesh->draw();
     }
+    glDisable(GL_BLEND);
 }
 
 unsigned int Renderer::output_width() const

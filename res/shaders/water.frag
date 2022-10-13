@@ -55,5 +55,5 @@ void main()
     frag_colour *= loss;
 
     // Make water transparent near edges to mask ugly seam
-    frag_colour.a = clamp(water_depth*3, 0, 1);
+    frag_colour.a = clamp(water_depth*10, 0, 1);
 }

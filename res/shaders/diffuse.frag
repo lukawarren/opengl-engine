@@ -16,5 +16,9 @@ void main()
     float diffuse = max(dot(normal, light_direction), 0.0) * 1.3;
     diffuse = max(diffuse, 0.3);
 
-    frag_colour = texture(image, out_texture_coord) * vec4(diffuse, diffuse, diffuse, 1.0);
+    // Ignore transparency
+    vec4 colour = texture(image, out_texture_coord);
+    if (colour.a < 0.5) discard;
+
+    frag_colour = colour * vec4(diffuse, diffuse, diffuse, 1.0);
 }
