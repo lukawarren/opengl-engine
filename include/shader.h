@@ -55,3 +55,9 @@ class QuadShader : public Shader
 public:
     QuadShader() : Shader("quad") {}
 };
+
+class TerrainShader : public Shader
+{
+public:
+    TerrainShader() : Shader("terrain") {}
+};

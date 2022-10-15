@@ -65,29 +65,53 @@ void Renderer::diffuse_pass(
     const unsigned int height,
     const std::optional<glm::vec4> clip_plane)
 {
-    // Update uniforms...
-    diffuse_shader.bind();
-    diffuse_shader.set_uniform("view", camera.view_matrix());
-    diffuse_shader.set_uniform("projection", camera.projection_matrix(width, height));
+    const auto set_common_uniforms = [&](Shader& shader)
+    {
+        // Update uniforms...
+        shader.bind();
+        shader.set_uniform("view", camera.view_matrix());
+        shader.set_uniform("projection", camera.projection_matrix(width, height));
 
-    // ...including clip planes (for planar reflections)
-    if (clip_plane.has_value())
-        diffuse_shader.set_uniform("clip_plane", clip_plane.value());
+        // ...including clip planes (for planar reflections)
+        if (clip_plane.has_value())
+            shader.set_uniform("clip_plane", clip_plane.value());
+    };
+
+    const auto entities = [&]()
+    {
+        set_common_uniforms(diffuse_shader);
+
+        // TODO: sort by least-expensive state-change
+        for (const auto& entity : scene.entities)
+        {
+            diffuse_shader.set_uniform("model", entity.transform.matrix());
+
+            for (const auto& mesh : entity.textured_meshes)
+            {
+                mesh.texture->bind();
+                mesh.mesh->bind();
+                mesh.mesh->draw();
+            }
+        }
+    };
+
+    const auto terrain = [&]()
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        set_common_uniforms(terrain_shader);
+
+        for (const auto& terrain : scene.terrains)
+        {
+            terrain_shader.set_uniform("model", terrain.transform.matrix());
+            terrain.mesh->bind();
+            terrain.mesh->draw();
+        }
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    };
 
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
-    // TODO: sort by least-expensive state-change
-    for (const auto& entity : scene.entities)
-    {
-        diffuse_shader.set_uniform("model", entity.transform.matrix());
-
-        for (const auto& mesh : entity.textured_meshes)
-        {
-            mesh.texture->bind();
-            mesh.mesh->bind();
-            mesh.mesh->draw();
-        }
-    }
+    entities();
+    terrain();
 }
 
 void Renderer::water_pass(const Scene& scene)

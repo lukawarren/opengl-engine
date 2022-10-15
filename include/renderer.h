@@ -33,4 +33,5 @@ private:
     DiffuseShader diffuse_shader;
     WaterShader water_shader;
     QuadShader quad_shader;
+    TerrainShader terrain_shader;
 };

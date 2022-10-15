@@ -17,23 +17,26 @@ int main()
     // Seutp scene
     Scene scene =
     {
-        .entities = { Entity("sponza/sponza.gltf"), Entity("pool/pool.glb"), Entity("cube.obj") },
+        .entities = { Entity("cube.obj"), Entity("pool/pool.glb") },
         .waters = { Water() },
+        .terrains = { Terrain() },
         .camera = Camera({ -6.0f, 3.5f, 0.0f }, 30.0f, 90.0f, 0.0f)
     };
 
-    auto* sponza = &scene.entities[0];
+    //auto* sponza = &scene.entities[0];
     auto* pool = &scene.entities[1];
     auto* water = &scene.waters[0];
     auto* camera = &scene.camera;
+    auto* terrain = &scene.terrains[0];
 
     pool->transform.scale = glm::vec3(5.0f);
     pool->transform.position = glm::vec3(0.0f, 0.1f, 0.0f);
     water->transform.scale = glm::vec3(4.3f);
+    terrain->transform.position.y = -5;
 
-    sponza->transform.scale = glm::vec3(0.03f);
+    /*sponza->transform.scale = glm::vec3(0.03f);
     sponza->transform.position.y = -1;
-    sponza->transform.position.z = 1;
+    sponza->transform.position.z = 1;*/
 
     while (renderer.update(scene))
     {
