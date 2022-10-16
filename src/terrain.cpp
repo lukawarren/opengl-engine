@@ -1,16 +1,21 @@
 #include "terrain.h"
+#include "stb_image.h"
+#include "resources.h"
+#include <numeric>
+#include <array>
 
-/*
-    Terrain mesh generation based off
-    series by "ThinMatrix"
-*/
-
-constexpr size_t vertices_per_side = 1000;
+constexpr size_t vertices_per_side = 256;
 constexpr size_t n_vertices = vertices_per_side * vertices_per_side;
-constexpr float scale = 100.0f;
+constexpr float horizontal_scale = 100.0f;
+constexpr float vertical_scale = 0.4f;
 
-Terrain::Terrain()
+Terrain::Terrain(const std::string& diffuse_texture, const std::string& height_map)
 {
+    // Load heightmap
+    int width, height, channels;
+    unsigned char* data = stbi_load(("../res/assets/" + height_map).c_str(), &width, &height, &channels, 0);
+    if (!data) throw std::runtime_error("failed to load terrain height map " + height_map);
+
     std::vector<float> vertices;
     std::vector<float> normals;
     std::vector<float> texture_coords;
@@ -28,16 +33,51 @@ Terrain::Terrain()
         for (size_t j = 0; j < vertices_per_side; ++j)
         {
             // Have origin of terrain be in its middle
-            const auto x = ((float)j / ((float)vertices_per_side - 1) - 0.5f) * scale;
-            const auto z = ((float)i / ((float)vertices_per_side - 1) - 0.5f) * scale;
+            const float x = ((float)j / ((float)vertices_per_side - 1) - 0.5f) * horizontal_scale;
+            const float z = ((float)i / ((float)vertices_per_side - 1) - 0.5f) * horizontal_scale;
+
+            // Sample heightmap
+            const auto get_height = [&](size_t grid_x, size_t grid_z)
+            {
+                const int image_x = ((float)grid_x / ((float)vertices_per_side)) * (float)width;
+                const int image_y = ((float)grid_z / ((float)vertices_per_side)) * (float)height;
+                if (image_x < 0 || image_y < 0 || image_x >= width || image_y >= height) return 0.0f;
+
+                const float image_sample = data[image_y * width + image_x];
+                return image_sample * vertical_scale;
+            };
+
+            const std::array<float, 9> heights =
+            {
+                get_height(i - 1, j - 1),
+                get_height(i - 1, j - 0),
+                get_height(i - 1, j + 1),
+                get_height(i + 0, j - 1),
+                get_height(i + 0, j - 0),
+                get_height(i + 0, j + 1),
+                get_height(i + 1, j - 1),
+                get_height(i + 1, j - 0),
+                get_height(i + 1, j + 1),
+            };
+
+            // Average surrounding height
+            const float y = std::accumulate(heights.begin(), heights.end(), 0.0f) / heights.size();
 
             vertices.emplace_back(x);
-            vertices.emplace_back(0);
+            vertices.emplace_back(y);
             vertices.emplace_back(z);
 
-            normals.emplace_back(0);
-            normals.emplace_back(1);
-            normals.emplace_back(0);
+            // Work out normals from surrounding heightmap values
+            const float height_l = heights[1];
+            const float height_r = heights[7];
+            const float height_d = heights[3];
+            const float height_u = heights[5];
+            glm::vec3 normal = glm::vec3(height_l - height_r, 2.0f, height_d - height_u);
+            normal = glm::normalize(normal);
+
+            normals.emplace_back(normal.x);
+            normals.emplace_back(normal.y);
+            normals.emplace_back(normal.z);
 
             texture_coords.emplace_back((float)j / ((float)vertices_per_side-1));
             texture_coords.emplace_back((float)i / ((float)vertices_per_side-1));
@@ -65,4 +105,6 @@ Terrain::Terrain()
 
     // Load to GPU
     mesh = std::make_shared<Mesh>(vertices, indices, texture_coords, normals);
+    texture = get_texture(diffuse_texture);
+    stbi_image_free(data);
 }

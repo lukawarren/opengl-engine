@@ -97,16 +97,17 @@ void Renderer::diffuse_pass(
 
     const auto terrain = [&]()
     {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         set_common_uniforms(terrain_shader);
 
         for (const auto& terrain : scene.terrains)
         {
             terrain_shader.set_uniform("model", terrain.transform.matrix());
+            terrain.texture->bind();
             terrain.mesh->bind();
             terrain.mesh->draw();
         }
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     };
 
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);

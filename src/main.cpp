@@ -19,7 +19,7 @@ int main()
     {
         .entities = { Entity("cube.obj"), Entity("pool/pool.glb") },
         .waters = { Water() },
-        .terrains = { Terrain() },
+        .terrains = { Terrain("terrain/diffuse.png", "terrain/height_map.png") },
         .camera = Camera({ -6.0f, 3.5f, 0.0f }, 30.0f, 90.0f, 0.0f)
     };
 
@@ -28,11 +28,12 @@ int main()
     auto* water = &scene.waters[0];
     auto* camera = &scene.camera;
     auto* terrain = &scene.terrains[0];
+    auto* cube = &scene.entities[0];
 
     pool->transform.scale = glm::vec3(5.0f);
     pool->transform.position = glm::vec3(0.0f, 0.1f, 0.0f);
     water->transform.scale = glm::vec3(4.3f);
-    terrain->transform.position.y = -5;
+    terrain->transform.position.y = -20;
 
     /*sponza->transform.scale = glm::vec3(0.03f);
     sponza->transform.position.y = -1;
@@ -42,6 +43,7 @@ int main()
     {
         // Water waves
         water->update();
+        cube->transform.position.y = sin(water->time*100)*0.03f+0.2f;
 
         // Deal with mouse grabbinig
         if (window.get_key(GLFW_KEY_ESCAPE))
