@@ -4,7 +4,7 @@
 #include <numeric>
 #include <array>
 
-constexpr size_t vertices_per_side = 256;
+constexpr size_t vertices_per_side = 128;
 constexpr size_t n_vertices = vertices_per_side * vertices_per_side;
 constexpr float horizontal_scale = 100.0f;
 constexpr float vertical_scale = 0.4f;
@@ -47,26 +47,31 @@ Terrain::Terrain(const std::string& diffuse_texture, const std::string& height_m
                 return image_sample * vertical_scale;
             };
 
-            const std::array<float, 4> heights =
+            // Average surrounding heights
+            const auto get_averaged_height = [&](size_t grid_x, size_t grid_y)
             {
-                get_height(i - 1, j - 0),
-                get_height(i + 1, j - 0),
-                get_height(i + 0, j - 1),
-                get_height(i + 0, j + 1),
+                const std::array<float, 5> heights =
+                {
+                    get_height(grid_x - 1, grid_y - 0),
+                    get_height(grid_x + 1, grid_y - 0),
+                    get_height(grid_x + 0, grid_y - 1),
+                    get_height(grid_x + 0, grid_y + 1),
+                    get_height(grid_x + 0, grid_y + 0),
+                };
+
+                return std::accumulate(heights.begin(), heights.end(), 0.0f) / heights.size();
             };
 
-            // Average surrounding height
-            const float y = std::accumulate(heights.begin(), heights.end(), 0.0f) / heights.size();
-
+            const float y = get_averaged_height(i, j);
             vertices.emplace_back(x);
             vertices.emplace_back(y);
             vertices.emplace_back(z);
 
             // Work out normals from surrounding heightmap values
-            const float height_l = heights[0];
-            const float height_r = heights[1];
-            const float height_d = heights[2];
-            const float height_u = heights[3];
+            const float height_l = get_averaged_height(i - 1, j);
+            const float height_r = get_averaged_height(i + 1, j);
+            const float height_d = get_averaged_height(i, j - 1);
+            const float height_u = get_averaged_height(i, j + 1);
             glm::vec3 normal = glm::vec3(height_l - height_r, 2.0f, height_d - height_u);
             normal = glm::normalize(normal);
 
