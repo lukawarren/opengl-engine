@@ -47,17 +47,12 @@ Terrain::Terrain(const std::string& diffuse_texture, const std::string& height_m
                 return image_sample * vertical_scale;
             };
 
-            const std::array<float, 9> heights =
+            const std::array<float, 4> heights =
             {
-                get_height(i - 1, j - 1),
                 get_height(i - 1, j - 0),
-                get_height(i - 1, j + 1),
-                get_height(i + 0, j - 1),
-                get_height(i + 0, j - 0),
-                get_height(i + 0, j + 1),
-                get_height(i + 1, j - 1),
                 get_height(i + 1, j - 0),
-                get_height(i + 1, j + 1),
+                get_height(i + 0, j - 1),
+                get_height(i + 0, j + 1),
             };
 
             // Average surrounding height
@@ -68,10 +63,10 @@ Terrain::Terrain(const std::string& diffuse_texture, const std::string& height_m
             vertices.emplace_back(z);
 
             // Work out normals from surrounding heightmap values
-            const float height_l = heights[1];
-            const float height_r = heights[7];
-            const float height_d = heights[3];
-            const float height_u = heights[5];
+            const float height_l = heights[0];
+            const float height_r = heights[1];
+            const float height_d = heights[2];
+            const float height_u = heights[3];
             glm::vec3 normal = glm::vec3(height_l - height_r, 2.0f, height_d - height_u);
             normal = glm::normalize(normal);
 
