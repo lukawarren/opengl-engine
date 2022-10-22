@@ -15,6 +15,7 @@ Terrain::Terrain(const std::string& diffuse_texture, const std::string& height_m
     int width, height, channels;
     unsigned char* data = stbi_load(("../res/assets/" + height_map).c_str(), &width, &height, &channels, 0);
     if (!data) throw std::runtime_error("failed to load terrain height map " + height_map);
+    assert(channels == 1);
 
     std::vector<float> vertices;
     std::vector<float> normals;
