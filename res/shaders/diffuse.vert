@@ -24,14 +24,14 @@ void main()
     // Clipping for planar reflections
     gl_ClipDistance[0] = dot(world_space, clip_plane);
 
-    // Normal mapping
-    vec3 bitangent = cross(normal, tangent);
+    // Normal mapping - use the "Gram-Schmidt process" to "re-orthoganalise"
     vec3 T = normalize(vec3(model * vec4(tangent,   0.0)));
-    vec3 B = normalize(vec3(model * vec4(bitangent, 0.0)));
     vec3 N = normalize(vec3(model * vec4(normal,    0.0)));
+    T = normalize(T - dot(T, N) * N);
+    vec3 B = cross(N, T);
 
     out_tbn = mat3(T, B, N);
     out_texture_coord = texture_coord;
-    out_normal = normal;
+    out_normal = transpose(inverse(mat3(model))) * normal; // Apply model matrix to normal!
     out_position = world_space.xyz;
 }

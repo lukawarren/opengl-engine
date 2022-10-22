@@ -1,15 +1,15 @@
 #include "renderer.h"
 #include <iostream>
 
-constexpr int width = 600;
-constexpr int height = 600;
+constexpr int width = 1600;
+constexpr int height = 900;
 
 Scene terrain_scene();
 Scene sponza_scene();
 
 int main()
 {
-    Renderer renderer("New window", width, height, 0.5);
+    Renderer renderer("New window", width, height, 1.0);
     Window& window = renderer.window;
     window.capture_mouse();
 
