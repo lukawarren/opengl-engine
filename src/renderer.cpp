@@ -29,6 +29,11 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     water_shader.set_uniform("z_far", z_far);
     water_shader.unbind();
 
+    // More texture units
+    diffuse_shader.bind();
+    diffuse_shader.set_uniform("diffuse_map", 0);
+    diffuse_shader.set_uniform("normal_map", 1);
+
     init_resources();
     this->render_scale = render_scale;
 }
@@ -88,7 +93,13 @@ void Renderer::diffuse_pass(
 
             for (const auto& mesh : entity.textured_meshes)
             {
-                mesh.texture->bind();
+                mesh.material.diffuse_texture->bind();
+
+                // Normal mapping
+                const auto& normal_map = mesh.material.normal_map;
+                diffuse_shader.set_uniform("has_normal_map", normal_map.has_value() && window.get_key(GLFW_KEY_N));
+                if (normal_map.has_value()) normal_map.value()->bind(1);
+
                 mesh.mesh->bind();
                 mesh.mesh->draw();
             }

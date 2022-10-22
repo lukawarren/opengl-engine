@@ -1,13 +1,20 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <optional>
 #include "texture.h"
 #include "mesh.h"
+
+struct Material
+{
+    Texture* diffuse_texture;
+    std::optional<Texture*> normal_map;
+};
 
 struct TexturedMesh
 {
     Mesh* mesh;
-    Texture* texture;
+    Material material;
 };
 
 void init_resources();

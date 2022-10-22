@@ -1,12 +1,15 @@
 #include "renderer.h"
 #include <iostream>
 
-constexpr int width = 1600;
-constexpr int height = 900;
+constexpr int width = 600;
+constexpr int height = 600;
+
+Scene terrain_scene();
+Scene sponza_scene();
 
 int main()
 {
-    Renderer renderer("New window", width, height, 1);
+    Renderer renderer("New window", width, height, 0.5);
     Window& window = renderer.window;
     window.capture_mouse();
 
@@ -15,35 +18,13 @@ int main()
     glm::vec2 mouse_position = window.mouse_position();
 
     // Seutp scene
-    Scene scene =
-    {
-        .entities = { Entity("cube.obj"), Entity("pool/pool.glb") },
-        .waters = { Water() },
-        .terrains = { Terrain("terrain/diffuse.png", "terrain/height_map.png") },
-        .camera = Camera({ -6.0f, 3.5f, 0.0f }, 30.0f, 90.0f, 0.0f)
-    };
-
-    //auto* sponza = &scene.entities[0];
-    auto* pool = &scene.entities[1];
-    auto* water = &scene.waters[0];
+    Scene scene = sponza_scene();
     auto* camera = &scene.camera;
-    auto* terrain = &scene.terrains[0];
-    auto* cube = &scene.entities[0];
-
-    pool->transform.scale = glm::vec3(5.0f);
-    pool->transform.position = glm::vec3(0.0f, 0.1f, 0.0f);
-    water->transform.scale = glm::vec3(4.3f);
-    terrain->transform.position.y = -20;
-
-    /*sponza->transform.scale = glm::vec3(0.03f);
-    sponza->transform.position.y = -1;
-    sponza->transform.position.z = 1;*/
 
     while (renderer.update(scene))
     {
         // Water waves
-        water->update();
-        cube->transform.position.y = sin(water->time*100)*0.03f+0.2f;
+        for (auto& water : scene.waters) water.update();
 
         // Deal with mouse grabbinig
         if (window.get_key(GLFW_KEY_ESCAPE))
@@ -89,4 +70,50 @@ int main()
     }
 
     return 0;
+}
+
+Scene terrain_scene()
+{
+    Scene scene =
+    {
+        .entities = { Entity("cube.obj"), Entity("pool/pool.glb") },
+        .waters = { Water() },
+        .terrains = { Terrain("terrain/diffuse.png", "terrain/height_map.png") },
+        .camera = Camera({ -6.0f, 3.5f, 0.0f }, 30.0f, 90.0f, 0.0f)
+    };
+
+    auto* sponza = &scene.entities[2];
+    auto* pool = &scene.entities[1];
+    auto* water = &scene.waters[0];
+    auto* terrain = &scene.terrains[0];
+
+    pool->transform.scale = glm::vec3(5.0f);
+    pool->transform.position = glm::vec3(0.0f, 0.1f, 0.0f);
+    water->transform.scale = glm::vec3(4.3f);
+    terrain->transform.position.y = -20;
+
+    sponza->transform.scale = glm::vec3(0.03f);
+    sponza->transform.position.y = -1;
+    sponza->transform.position.z = 1;
+
+    return scene;
+}
+
+Scene sponza_scene()
+{
+    Scene scene =
+    {
+        .entities = { Entity("sponza/sponza.gltf"), Entity("cube.obj") },
+        .waters = {},
+        .terrains = {},
+        .camera = Camera({ -6.0f, 3.5f, 0.0f }, 30.0f, 90.0f, 0.0f)
+    };
+
+    auto* sponza = &scene.entities[0];
+    sponza->transform.scale = glm::vec3(0.01f);
+    sponza->transform.position.y = -1;
+    sponza->transform.position.z = 1;
+    sponza->transform.rotation.y = 90;
+
+    return scene;
 }

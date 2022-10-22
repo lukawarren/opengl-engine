@@ -10,7 +10,8 @@ public:
         const std::vector<float>& vertices,
         const std::vector<unsigned int>& indices,
         const std::vector<float>& texture_coords,
-        const std::optional<std::vector<float>>& normals = {}
+        const std::optional<std::vector<float>>& normals = {},
+        const std::optional<std::vector<float>>& tangents = {}
     );
     Mesh(const Mesh&) = delete;
     ~Mesh();

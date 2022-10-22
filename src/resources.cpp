@@ -13,7 +13,7 @@ static std::unordered_map<std::string, Mesh*> meshes;
 static std::unordered_map<std::string, Texture*> textures;
 
 static Mesh* mesh_from_assimp(const aiMesh* assimp_mesh, const std::string& id);
-static Texture* texture_from_assimp(const aiMaterial* material, const std::string& path);
+static Material material_from_assimp(const aiMaterial* material, const std::string& path);
 
 Mesh* quad_mesh;
 
@@ -27,7 +27,7 @@ std::vector<TexturedMesh> load_assimp_scene(const std::string& filename)
     Assimp::Importer importer;
     std::vector<TexturedMesh> textured_meshes;
 
-    const auto flags = aiProcess_Triangulate | aiProcess_FlipUVs;
+    const auto flags = aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace;
 
     // Load entire scene from disk
     const aiScene* scene = importer.ReadFile("../res/assets/" + filename, flags);
@@ -50,7 +50,7 @@ std::vector<TexturedMesh> load_assimp_scene(const std::string& filename)
 
             textured_meshes.push_back({
                 mesh_from_assimp(mesh, filename + std::to_string(nth_mesh++)),
-                texture_from_assimp(material, filename)
+                material_from_assimp(material, filename),
             });
         }
 
@@ -70,12 +70,15 @@ static Mesh* mesh_from_assimp(const aiMesh* assimp_mesh, const std::string& id)
 
     std::vector<float>          vertices;
     std::vector<float>          normals;
+    std::vector<float>          tangents;
+    std::vector<float>          bitangents;
     std::vector<float>          texture_coords;
     std::vector<unsigned int>   indices;
 
     // Reserve space in advance (faster)
     vertices       .reserve(assimp_mesh->mNumVertices * 3);
     normals        .reserve(assimp_mesh->mNumVertices * 3);
+    tangents       .reserve(assimp_mesh->mNumVertices * 3);
     texture_coords .reserve(assimp_mesh->mNumVertices * 2);
     indices        .reserve(assimp_mesh->mNumFaces * 3);
 
@@ -89,6 +92,10 @@ static Mesh* mesh_from_assimp(const aiMesh* assimp_mesh, const std::string& id)
         normals.push_back(assimp_mesh->mNormals[i].x);
         normals.push_back(assimp_mesh->mNormals[i].y);
         normals.push_back(assimp_mesh->mNormals[i].z);
+
+        tangents.push_back(assimp_mesh->mTangents[i].x);
+        tangents.push_back(assimp_mesh->mTangents[i].y);
+        tangents.push_back(assimp_mesh->mTangents[i].z);
 
         texture_coords.push_back(assimp_mesh->mTextureCoords[0][i].x);
         texture_coords.push_back(assimp_mesh->mTextureCoords[0][i].y);
@@ -106,23 +113,44 @@ static Mesh* mesh_from_assimp(const aiMesh* assimp_mesh, const std::string& id)
     }
 
     // Cache for later then return
-    Mesh* mesh = new Mesh(vertices, indices, texture_coords, normals);
+    Mesh* mesh = new Mesh(vertices, indices, texture_coords, normals, tangents);
     meshes.emplace(id, mesh);
     return mesh;
 }
 
-static Texture* texture_from_assimp(const aiMaterial* material, const std::string& path)
+static Material material_from_assimp(const aiMaterial* material, const std::string& path)
 {
-    // Use missing texture if none exists
-    if (material->GetTextureCount(aiTextureType_DIFFUSE) == 0)
-        return get_texture("missing_texture.png");
-
     // Remove filename from path (so we're just left with directory)
     const std::string directory = path.substr(0, path.find_last_of('/')) + std::string("/");
 
-    aiString filename;
-    material->GetTexture(aiTextureType_DIFFUSE, 0, &filename);
-    return get_texture(directory + std::string(filename.C_Str()));
+    const auto from_assimp = [&](const aiTextureType type)
+    {
+        aiString filename;
+        material->GetTexture(type, 0, &filename);
+        return get_texture(directory + std::string(filename.C_Str()));
+    };
+
+    const auto diffuse_texture = [&]()
+    {
+        // Use missing texture if none exists
+        if (material->GetTextureCount(aiTextureType_DIFFUSE) == 0)
+            return get_texture("missing_texture.png");
+        else
+            return from_assimp(aiTextureType_DIFFUSE);
+    };
+
+    const auto normal_map = [&]()
+    {
+        if (material->GetTextureCount(aiTextureType_NORMALS))
+            return std::optional<Texture*>(from_assimp(aiTextureType_NORMALS));
+        else
+            return std::optional<Texture*>();
+    };
+
+    return Material {
+        .diffuse_texture = diffuse_texture(),
+        .normal_map = normal_map()
+    };
 }
 
 Texture* get_texture(const std::string& filename)
