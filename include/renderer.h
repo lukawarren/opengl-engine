@@ -17,6 +17,8 @@ public:
     Window window;
 
 private:
+
+    // Render passes
     void diffuse_pass(
         const Scene& scene,
         const Camera& camera,
@@ -24,14 +26,18 @@ private:
         const unsigned int height,
         const std::optional<glm::vec4> clip_plane = {});
     void water_pass(const Scene& scene);
+    void shadow_pass(const Scene& scene);
 
-    unsigned int output_width() const;
-    unsigned int output_height() const;
-    Framebuffer output_framebuffer;
+    // Output
     float render_scale;
+    Framebuffer output_framebuffer;
+    unsigned int render_width() const;
+    unsigned int render_height() const;
 
+    // Shaders
     DiffuseShader diffuse_shader;
     WaterShader water_shader;
     QuadShader quad_shader;
     TerrainShader terrain_shader;
+    ShadowMapShader shadow_shader;
 };

@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <glad/glad.h>
+#include <glm/glm.hpp>
 
 class Texture
 {
@@ -17,6 +18,7 @@ public:
     Texture(const Texture&) = delete;
     ~Texture();
 
+    void clamp(const glm::vec4& colour) const;
     void bind(const unsigned int unit = 0) const;
     void unbind() const;
 

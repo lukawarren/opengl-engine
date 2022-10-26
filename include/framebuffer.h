@@ -5,7 +5,19 @@
 class Framebuffer
 {
 public:
-    Framebuffer(const unsigned int width, const unsigned int height, const bool depth_map = false);
+
+    enum class DepthSettings
+    {
+        NO_DEPTH,
+        ENABLE_DEPTH,
+        ONLY_DEPTH
+    };
+
+    Framebuffer(
+        const unsigned int width,
+        const unsigned int height,
+        const DepthSettings depth_settings = DepthSettings::NO_DEPTH
+    );
     Framebuffer(const Framebuffer&) = delete;
     ~Framebuffer();
 
@@ -15,7 +27,7 @@ public:
     unsigned int width;
     unsigned int height;
 
-    Texture colour_texture;
+    std::optional<Texture> colour_texture;
     std::optional<Texture> depth_map;
 
 private:

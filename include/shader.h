@@ -38,26 +38,14 @@ private:
     std::unordered_map<std::string, int> uniforms;
 };
 
-class DiffuseShader : public Shader
-{
-public:
-    DiffuseShader() : Shader("diffuse") {}
+// Shader classes
+#define SHADER(x, y) class x : public Shader {\
+public:\
+    x() : Shader(y) {}\
 };
 
-class WaterShader : public Shader
-{
-public:
-    WaterShader() : Shader("water") {}
-};
-
-class QuadShader : public Shader
-{
-public:
-    QuadShader() : Shader("quad") {}
-};
-
-class TerrainShader : public Shader
-{
-public:
-    TerrainShader() : Shader("terrain") {}
-};
+SHADER(DiffuseShader, "diffuse")
+SHADER(WaterShader, "water")
+SHADER(QuadShader, "quad")
+SHADER(TerrainShader, "terrain")
+SHADER(ShadowMapShader, "shadow_map")

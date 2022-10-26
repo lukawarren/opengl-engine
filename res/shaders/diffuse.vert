@@ -9,17 +9,20 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 uniform vec4 clip_plane;
+uniform mat4 lightspace_matrix;
 
 out vec2 out_texture_coord;
 out vec3 out_normal;
 out vec3 out_position;
 out mat3 out_tbn;
+out vec4 out_lightspace_position;
 
 void main()
 {
     // Work out position
     vec4 world_space = model * vec4(pos, 1.0);
     gl_Position = projection * view * world_space;
+    out_lightspace_position = lightspace_matrix * world_space;
 
     // Clipping for planar reflections
     gl_ClipDistance[0] = dot(world_space, clip_plane);

@@ -4,13 +4,14 @@
 
 Renderer::Renderer(const std::string& title, const int width, const int height, const float render_scale) :
     window(title, width, height),
-    output_framebuffer(window.framebuffer_width * render_scale, window.framebuffer_height * render_scale)
+    render_scale(render_scale),
+    output_framebuffer(render_width(), render_height())
 {
     // Setup GL state
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    glViewport(0, 0, output_width(), output_height());
+    glViewport(0, 0, render_width(), render_height());
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     // For water soft edges
@@ -33,9 +34,12 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     diffuse_shader.bind();
     diffuse_shader.set_uniform("diffuse_map", 0);
     diffuse_shader.set_uniform("normal_map", 1);
+    diffuse_shader.set_uniform("shadow_map", 2);
+    terrain_shader.bind();
+    terrain_shader.set_uniform("diffuse_map", 0);
+    terrain_shader.set_uniform("shadow_map", 2);
 
     init_resources();
-    this->render_scale = render_scale;
 }
 
 bool Renderer::update(const Scene& scene)
@@ -44,8 +48,9 @@ bool Renderer::update(const Scene& scene)
     if (!window.update()) return false;
 
     // Render passes
+    shadow_pass(scene);
     output_framebuffer.bind();
-    diffuse_pass(scene, scene.camera, output_width(), output_height());
+    diffuse_pass(scene, scene.camera, render_width(), render_height());
     water_pass(scene);
     output_framebuffer.unbind();
 
@@ -53,11 +58,11 @@ bool Renderer::update(const Scene& scene)
     glDisable(GL_CULL_FACE);
         glViewport(0, 0, window.framebuffer_width, window.framebuffer_height);
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-            output_framebuffer.colour_texture.bind();
+            output_framebuffer.colour_texture->bind();
             quad_shader.bind();
             quad_mesh->bind();
             quad_mesh->draw();
-        glViewport(0, 0, output_width(), output_height());
+        glViewport(0, 0, render_width(), render_height());
     glEnable(GL_CULL_FACE);
 
     return true;
@@ -77,8 +82,9 @@ void Renderer::diffuse_pass(
         shader.set_uniform("view", camera.view_matrix());
         shader.set_uniform("projection", camera.projection_matrix(width, height));
         shader.set_uniform("ambient_light", scene.ambient_light);
-        shader.set_uniform("light_direction", scene.sun.direction);
+        shader.set_uniform("light_position", scene.sun.position);
         shader.set_uniform("light_colour", scene.sun.colour);
+        shader.set_uniform("lightspace_matrix", scene.sun.get_light_projection_matrix());
 
         // ...including clip planes (for planar reflections)
         if (clip_plane.has_value())
@@ -125,6 +131,7 @@ void Renderer::diffuse_pass(
     };
 
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+    scene.sun.shadow_buffer->depth_map->bind(2);
     entities();
     terrain();
 }
@@ -147,8 +154,8 @@ void Renderer::water_pass(const Scene& scene)
         diffuse_pass(
             scene,
             water.reflection_camera(scene.camera),
-            output_width(),
-            output_height(),
+            render_width(),
+            render_height(),
             glm::vec4(0, 1, 0, -water.transform.position.y+0.1f)
             // Add small offset to fix glitches at edges ^^
         );
@@ -167,8 +174,8 @@ void Renderer::water_pass(const Scene& scene)
         diffuse_pass(
             scene,
             scene.camera,
-            output_width(),
-            output_height(),
+            render_width(),
+            render_height(),
             glm::vec4 (0, -1, 0, water.transform.position.y+0.1f)
             // Add small offset to fix glitches at edges ^^
         );
@@ -177,18 +184,18 @@ void Renderer::water_pass(const Scene& scene)
 
     // Reset rendering state
     output_framebuffer.bind();
-    glViewport(0, 0, output_width(), output_height());
+    glViewport(0, 0, render_width(), render_height());
     quad_mesh->bind();
 
     // Set uniforms
     water_shader.bind();
     water_shader.set_uniform("view", scene.camera.view_matrix());
     water_shader.set_uniform("projection", scene.camera.projection_matrix(
-        output_width(),
-        output_height()
+        render_width(),
+        render_height()
     ));
     water_shader.set_uniform("camera_position", scene.camera.position);
-    water_shader.set_uniform("light_direction", scene.sun.direction);
+    water_shader.set_uniform("light_position", scene.sun.position);
     water_shader.set_uniform("light_colour", scene.sun.colour);
 
     // Render water
@@ -199,8 +206,8 @@ void Renderer::water_pass(const Scene& scene)
         water_shader.set_uniform("model", water.transform.matrix());
 
         // Texture units
-        water.reflection_buffer->colour_texture.bind(0);
-        water.refraction_buffer->colour_texture.bind(1);
+        water.reflection_buffer->colour_texture->bind(0);
+        water.refraction_buffer->colour_texture->bind(1);
         water.refraction_buffer->depth_map->bind(2);
         water.distortion_map->bind(3);
         water.normal_map->bind(4);
@@ -210,12 +217,51 @@ void Renderer::water_pass(const Scene& scene)
     glDisable(GL_BLEND);
 }
 
-unsigned int Renderer::output_width() const
+void Renderer::shadow_pass(const Scene& scene)
+{
+    // "Peter-panning" work-around
+    glCullFace(GL_FRONT);
+
+    // Bind framebuffer
+    scene.sun.shadow_buffer->bind();
+    glViewport(0, 0, shadowmap_size, shadowmap_size);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    shadow_shader.bind();
+
+    const glm::mat4 view_projection = scene.sun.get_light_projection_matrix();
+
+    // Render entities
+    for (const auto& entity : scene.entities)
+    {
+        shadow_shader.set_uniform("mvp", view_projection * entity.transform.matrix());
+
+        for (const auto& mesh : entity.textured_meshes)
+        {
+            mesh.mesh->bind();
+            mesh.mesh->draw();
+        }
+    }
+
+    // Render terrain (disable peter panning as it won't work for completely thin surfaces)
+    glCullFace(GL_BACK);
+    for (const auto& terrain : scene.terrains)
+    {
+        shadow_shader.set_uniform("mvp", view_projection * terrain.transform.matrix());
+        terrain.mesh->bind();
+        terrain.mesh->draw();
+    }
+
+    // Restore
+    scene.sun.shadow_buffer->unbind();
+    glViewport(0, 0, render_width(), render_height());
+}
+
+unsigned int Renderer::render_width() const
 {
     return window.framebuffer_width * render_scale;
 }
 
-unsigned int Renderer::output_height() const
+unsigned int Renderer::render_height() const
 {
     return window.framebuffer_height * render_scale;
 }

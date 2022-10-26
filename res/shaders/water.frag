@@ -69,7 +69,7 @@ void main()
     frag_colour *= loss;
 
     // Specular lighting
-    vec3 reflected_light = reflect(normalize(light_direction), normal);
+    vec3 reflected_light = reflect(normalize(out_from_light), normal);
     float specular = max(dot(reflected_light, view_vector), 0.0);
     specular = pow(specular, specular_damper) * specular_factor;
     frag_colour += vec4(specular * light_colour, 0);

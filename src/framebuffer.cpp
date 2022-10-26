@@ -2,25 +2,34 @@
 #include <stdexcept>
 #include "framebuffer.h"
 
-Framebuffer::Framebuffer(const unsigned int width, const unsigned int height, const bool depth_map) :
-    colour_texture(width, height)
+Framebuffer::Framebuffer(const unsigned int width, const unsigned int height, const DepthSettings depth_settings)
 {
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-    // Add colour attachment
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT0,
-        GL_TEXTURE_2D,
-        colour_texture.texture_id,
-        0
-    );
+    // Add colour attachment (if need be)
+    if (depth_settings != DepthSettings::ONLY_DEPTH)
+    {
+        this->colour_texture.emplace(width, height);
+        glFramebufferTexture2D(
+            GL_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0,
+            GL_TEXTURE_2D,
+            colour_texture->texture_id,
+            0
+        );
+    }
+    else
+    {
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+    }
 
-    if (depth_map)
+    if (depth_settings != DepthSettings::NO_DEPTH)
     {
         // Create depth buffer
         this->depth_map.emplace(width, height, GL_DEPTH_COMPONENT, GL_FLOAT);
+        this->depth_map->clamp(glm::vec4(0.0f));
         glFramebufferTexture2D(
             GL_FRAMEBUFFER,
             GL_DEPTH_ATTACHMENT,
@@ -29,7 +38,7 @@ Framebuffer::Framebuffer(const unsigned int width, const unsigned int height, co
             0
         );
     }
-    else
+    else if (depth_settings == DepthSettings::NO_DEPTH)
     {
         // Create renderbuffer for depth and stencil buffers, as we don't
         // mean to read from them

@@ -58,6 +58,16 @@ Texture::Texture(
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void Texture::clamp(const glm::vec4& colour) const
+{
+    const float border_colour[] = { colour.r, colour.g, colour.b, colour.a };
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_colour);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 void Texture::bind(const unsigned int unit) const
 {
     glActiveTexture(GL_TEXTURE0 + unit);

@@ -17,7 +17,12 @@ public:
     }) : transform(_transform)
     {
         reflection_buffer = std::make_shared<Framebuffer>(texture_width, texture_height);
-        refraction_buffer = std::make_shared<Framebuffer>(texture_width, texture_height, true);
+        refraction_buffer = std::make_shared<Framebuffer>(
+            texture_width,
+            texture_height,
+            Framebuffer::DepthSettings::ENABLE_DEPTH
+        );
+
         distortion_map = get_texture("water/dudv.png");
         normal_map = get_texture("water/normal_map.png");
     }

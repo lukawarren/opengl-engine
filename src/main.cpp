@@ -79,7 +79,7 @@ Scene terrain_scene()
         .entities = { Entity("cube.obj"), Entity("pool/pool.glb") },
         .waters = { Water() },
         .terrains = { Terrain("terrain/diffuse.png", "terrain/height_map.png") },
-        .sun = { { 0.2f, -1.0f, 0.5f }, { 1.0f, 1.0f, 1.3f } },
+        .sun = { { 50.0f, 80.0f, 25.0f }, { 1.0f, 1.0f, 1.3f } },
         .camera = Camera({ -6.0f, 3.5f, 0.0f }, 30.0f, 90.0f, 0.0f)
     };
 
@@ -104,12 +104,14 @@ Scene sponza_scene()
 {
     Scene scene =
     {
-        .entities = { Entity("sponza/sponza.gltf"), Entity("cube.obj") },
+        .entities = { Entity("sponza/sponza.gltf") },
         .waters = {},
         .terrains = {},
-        .sun = { { 0.2f, -1.0f, 0.5f }, { 1.0f, 1.0f, 1.3f } },
+        .sun = { { 0.1f, 1.0f, 0.3f }, { 1.0f, 1.0f, 1.3f } },
         .camera = Camera({ -6.0f, 3.5f, 0.0f }, 30.0f, 90.0f, 0.0f)
     };
+
+    scene.sun.position *= 20.0f;
 
     auto* sponza = &scene.entities[0];
     sponza->transform.scale = glm::vec3(0.01f);
