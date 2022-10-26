@@ -76,6 +76,9 @@ void Renderer::diffuse_pass(
         shader.bind();
         shader.set_uniform("view", camera.view_matrix());
         shader.set_uniform("projection", camera.projection_matrix(width, height));
+        shader.set_uniform("ambient_light", scene.ambient_light);
+        shader.set_uniform("light_direction", scene.sun.direction);
+        shader.set_uniform("light_colour", scene.sun.colour);
 
         // ...including clip planes (for planar reflections)
         if (clip_plane.has_value())
@@ -185,6 +188,8 @@ void Renderer::water_pass(const Scene& scene)
         output_height()
     ));
     water_shader.set_uniform("camera_position", scene.camera.position);
+    water_shader.set_uniform("light_direction", scene.sun.direction);
+    water_shader.set_uniform("light_colour", scene.sun.colour);
 
     // Render water
     glEnable(GL_BLEND);

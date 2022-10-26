@@ -9,9 +9,11 @@ uniform sampler2D diffuse_map;
 uniform sampler2D normal_map;
 uniform bool has_normal_map;
 
-layout (location = 0) out vec4 frag_colour;
+uniform vec3 ambient_light;
+uniform vec3 light_direction;
+uniform vec3 light_colour;
 
-const vec3 light_pos = vec3(5, 10, 3);
+layout (location = 0) out vec4 frag_colour;
 
 void main()
 {
@@ -27,13 +29,12 @@ void main()
         normal = normalize(out_normal);
 
     // Diffuse lighting
-    vec3 light_direction = normalize(light_pos - out_position);
-    float diffuse = max(dot(normal, light_direction), 0.0) * 1.3;
-    diffuse = max(diffuse, 0.3);
+    vec3 diffuse = max(dot(normal, -light_direction), 0.0) * light_colour;
+    diffuse += ambient_light;
 
     // Ignore transparency
     vec4 colour = texture(diffuse_map, out_texture_coord);
     if (colour.a < 0.5) discard;
 
-    frag_colour = colour * vec4(diffuse, diffuse, diffuse, 1.0);
+    frag_colour = colour * vec4(diffuse, 1.0);
 }

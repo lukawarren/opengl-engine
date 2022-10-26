@@ -79,6 +79,7 @@ Scene terrain_scene()
         .entities = { Entity("cube.obj"), Entity("pool/pool.glb") },
         .waters = { Water() },
         .terrains = { Terrain("terrain/diffuse.png", "terrain/height_map.png") },
+        .sun = { { 0.2f, -1.0f, 0.5f }, { 1.0f, 1.0f, 1.3f } },
         .camera = Camera({ -6.0f, 3.5f, 0.0f }, 30.0f, 90.0f, 0.0f)
     };
 
@@ -106,6 +107,7 @@ Scene sponza_scene()
         .entities = { Entity("sponza/sponza.gltf"), Entity("cube.obj") },
         .waters = {},
         .terrains = {},
+        .sun = { { 0.2f, -1.0f, 0.5f }, { 1.0f, 1.0f, 1.3f } },
         .camera = Camera({ -6.0f, 3.5f, 0.0f }, 30.0f, 90.0f, 0.0f)
     };
 

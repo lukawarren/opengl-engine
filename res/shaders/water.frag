@@ -11,6 +11,9 @@ uniform sampler2D depth_map;
 uniform sampler2D distortion_map;
 uniform sampler2D normal_map;
 
+uniform vec3 light_direction;
+uniform vec3 light_colour;
+
 uniform float z_near;
 uniform float z_far;
 uniform float time;
@@ -66,10 +69,10 @@ void main()
     frag_colour *= loss;
 
     // Specular lighting
-    vec3 reflected_light = reflect(normalize(out_from_light), normal);
+    vec3 reflected_light = reflect(normalize(light_direction), normal);
     float specular = max(dot(reflected_light, view_vector), 0.0);
     specular = pow(specular, specular_damper) * specular_factor;
-    frag_colour += specular;
+    frag_colour += vec4(specular * light_colour, 0);
 
     // Make water transparent near edges to mask ugly seam
     frag_colour.a = clamp(water_depth*10, 0, 1);
