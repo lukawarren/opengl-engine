@@ -1,4 +1,5 @@
 #include "window.h"
+#include "config.h"
 #include <stdexcept>
 #include <iostream>
 
@@ -10,9 +11,11 @@ Window::Window(const std::string& name, const int _width, const int _height) :
     init_glad();
 
 #ifndef __APPLE__
+#if ENABLE_GL_DEBUGGING
     // On modern platforms (i.e. not Apple), we can enable GL_DEBUG_OUTPUT
     // to catch errors that might otherwise go unnoticed.
     enable_debugging();
+#endif
 #endif
 }
 

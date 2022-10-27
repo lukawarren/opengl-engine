@@ -27,9 +27,11 @@ private:
         const std::optional<glm::vec4> clip_plane = {});
     void water_pass(const Scene& scene);
     void shadow_pass(const Scene& scene);
+    void volumetrics_pass(const Scene& scene);
 
     // Output
     float render_scale;
+    Framebuffer volumetric_framebuffer;
     Framebuffer output_framebuffer;
     unsigned int render_width() const;
     unsigned int render_height() const;
@@ -40,6 +42,7 @@ private:
     QuadShader quad_shader;
     TerrainShader terrain_shader;
     ShadowMapShader shadow_shader;
+    VolumetricsShader volumetrics_shader;
 
     bool did_bake_shadows = false;
 };

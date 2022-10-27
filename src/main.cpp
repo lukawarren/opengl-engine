@@ -104,10 +104,10 @@ Scene sponza_scene()
 {
     Scene scene =
     {
-        .entities = { Entity("sponza/sponza.gltf") },
+        .entities = { Entity("sponza/sponza.gltf"), Entity("cube.obj") },
         .waters = {},
         .terrains = {},
-        .sun = { { 0.15f, 1.0f, 0.3f }, { 1.0f, 1.0f, 1.3f } },
+        .sun = { { 0.15f, 1.0f, 0.3f }, { 255.0 / 255.0, 255.0 / 255.0, 219.0 / 255.0 } },
         .camera = Camera({ -6.0f, 3.5f, 0.0f }, 30.0f, 90.0f, 0.0f)
     };
 
@@ -118,6 +118,9 @@ Scene sponza_scene()
     sponza->transform.position.y = -1;
     sponza->transform.position.z = 1;
     sponza->transform.rotation.y = 90;
+
+    auto* cube = &scene.entities[1];
+    cube->transform.position.y = 5;
 
     return scene;
 }

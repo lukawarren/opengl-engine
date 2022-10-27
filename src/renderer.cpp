@@ -5,7 +5,8 @@
 Renderer::Renderer(const std::string& title, const int width, const int height, const float render_scale) :
     window(title, width, height),
     render_scale(render_scale),
-    output_framebuffer(render_width(), render_height())
+    volumetric_framebuffer(render_width(), render_height()),
+    output_framebuffer(render_width(), render_height(), Framebuffer::DepthSettings::ENABLE_DEPTH)
 {
     // Setup GL state
     glEnable(GL_DEPTH_TEST);
@@ -38,6 +39,10 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     terrain_shader.bind();
     terrain_shader.set_uniform("diffuse_map", 0);
     terrain_shader.set_uniform("shadow_map", 2);
+    volumetrics_shader.bind();
+    volumetrics_shader.set_uniform("image", 0);
+    volumetrics_shader.set_uniform("depth_map", 1);
+    volumetrics_shader.set_uniform("shadow_map", 2);
 
     init_resources();
 }
@@ -60,13 +65,22 @@ bool Renderer::update(const Scene& scene)
     water_pass(scene);
     output_framebuffer.unbind();
 
-    // Display scaled output
     glDisable(GL_CULL_FACE);
+
+        // Post processing
+        quad_mesh->bind();
+        volumetrics_pass(scene);
+
+        // Display scaled output
         glViewport(0, 0, window.framebuffer_width, window.framebuffer_height);
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-            output_framebuffer.colour_texture->bind();
+
+            if (!window.get_key(GLFW_KEY_N))
+                volumetric_framebuffer.colour_texture->bind();
+            else
+                output_framebuffer.colour_texture->bind();
+
             quad_shader.bind();
-            quad_mesh->bind();
             quad_mesh->draw();
         glViewport(0, 0, render_width(), render_height());
     glEnable(GL_CULL_FACE);
@@ -112,7 +126,7 @@ void Renderer::diffuse_pass(
 
                 // Normal mapping
                 const auto& normal_map = mesh.material.normal_map;
-                diffuse_shader.set_uniform("has_normal_map", normal_map.has_value() && window.get_key(GLFW_KEY_N));
+                diffuse_shader.set_uniform("has_normal_map", normal_map.has_value());
                 if (normal_map.has_value()) normal_map.value()->bind(1);
 
                 mesh.mesh->bind();
@@ -261,6 +275,29 @@ void Renderer::shadow_pass(const Scene& scene)
     // Restore
     buffer->unbind();
     glViewport(0, 0, render_width(), render_height());
+}
+
+void Renderer::volumetrics_pass(const Scene& scene)
+{
+    volumetric_framebuffer.bind();
+    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+    // Textures
+    output_framebuffer.colour_texture->bind(0);
+    output_framebuffer.depth_map->bind(1);
+    scene.sun.shadow_buffer->depth_map->bind(2);
+
+    // Uniforms
+    const auto view = scene.camera.view_matrix();
+    const auto projection = scene.camera.projection_matrix(render_width(), render_height());
+    volumetrics_shader.bind();
+    volumetrics_shader.set_uniform("inverse_view", glm::inverse(view));
+    volumetrics_shader.set_uniform("inverse_projection", glm::inverse(projection));
+    volumetrics_shader.set_uniform("lightspace", scene.sun.get_light_projection_matrix());
+    volumetrics_shader.set_uniform("light_colour", scene.sun.colour);
+    quad_mesh->draw();
+
+    volumetric_framebuffer.unbind();
 }
 
 unsigned int Renderer::render_width() const
