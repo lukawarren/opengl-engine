@@ -3,8 +3,6 @@
 #include <glm/glm.hpp>
 #include "framebuffer.h"
 
-constexpr unsigned int shadowmap_size = 2048;
-
 struct DirectionalLight
 {
     glm::vec3 position = {};
@@ -16,8 +14,8 @@ struct DirectionalLight
         this->position = position;
         this->colour = colour;
         shadow_buffer = std::make_shared<Framebuffer>(
-            shadowmap_size,
-            shadowmap_size,
+            SHADOWMAP_RESOLUTION,
+            SHADOWMAP_RESOLUTION,
             Framebuffer::DepthSettings::ONLY_DEPTH
         );
     }
@@ -26,7 +24,7 @@ struct DirectionalLight
     {
         const float near = 0.01f;
         const float far = 100.0f;
-        const float size = 10.0f;
+        const float size = 20.0f;
 
         glm::mat4 lightProjection = glm::ortho(-size, size, -size, size, near, far);
         glm::mat4 lightView = glm::lookAt

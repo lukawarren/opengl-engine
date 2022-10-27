@@ -47,8 +47,14 @@ bool Renderer::update(const Scene& scene)
     // Update window; poll events
     if (!window.update()) return false;
 
+    // Shadows
+    if (BAKE_SHADOWMAPS == false || !did_bake_shadows)
+    {
+        shadow_pass(scene);
+        did_bake_shadows = true;
+    }
+
     // Render passes
-    shadow_pass(scene);
     output_framebuffer.bind();
     diffuse_pass(scene, scene.camera, render_width(), render_height());
     water_pass(scene);
@@ -223,8 +229,9 @@ void Renderer::shadow_pass(const Scene& scene)
     glCullFace(GL_FRONT);
 
     // Bind framebuffer
-    scene.sun.shadow_buffer->bind();
-    glViewport(0, 0, shadowmap_size, shadowmap_size);
+    const auto& buffer = scene.sun.shadow_buffer;
+    buffer->bind();
+    glViewport(0, 0, buffer->width, buffer->height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     shadow_shader.bind();
 
@@ -252,7 +259,7 @@ void Renderer::shadow_pass(const Scene& scene)
     }
 
     // Restore
-    scene.sun.shadow_buffer->unbind();
+    buffer->unbind();
     glViewport(0, 0, render_width(), render_height());
 }
 

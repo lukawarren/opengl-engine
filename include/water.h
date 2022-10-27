@@ -2,10 +2,8 @@
 #include "transform.h"
 #include "framebuffer.h"
 #include "resources.h"
+#include "config.h"
 #include <memory>
-
-constexpr unsigned int texture_width = 1024;
-constexpr unsigned int texture_height = 1024;
 
 class Water
 {
@@ -16,10 +14,13 @@ public:
         { 1.0f, 1.0f, 1.0f }
     }) : transform(_transform)
     {
-        reflection_buffer = std::make_shared<Framebuffer>(texture_width, texture_height);
+        reflection_buffer = std::make_shared<Framebuffer>(
+            REFLECTION_RESOLUTION,
+            REFLECTION_RESOLUTION
+        );
         refraction_buffer = std::make_shared<Framebuffer>(
-            texture_width,
-            texture_height,
+            REFLECTION_RESOLUTION,
+            REFLECTION_RESOLUTION,
             Framebuffer::DepthSettings::ENABLE_DEPTH
         );
 

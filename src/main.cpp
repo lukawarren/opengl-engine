@@ -107,7 +107,7 @@ Scene sponza_scene()
         .entities = { Entity("sponza/sponza.gltf") },
         .waters = {},
         .terrains = {},
-        .sun = { { 0.1f, 1.0f, 0.3f }, { 1.0f, 1.0f, 1.3f } },
+        .sun = { { 0.15f, 1.0f, 0.3f }, { 1.0f, 1.0f, 1.3f } },
         .camera = Camera({ -6.0f, 3.5f, 0.0f }, 30.0f, 90.0f, 0.0f)
     };
 

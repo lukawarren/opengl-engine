@@ -31,7 +31,7 @@ float get_shadow(vec4 lightspace_position)
         return 0;
 
     // PCF
-    float bias = 0.05;
+    float bias = 0.0005;
     float shadow = 0.0;
     vec2 texel_size = 1.0 / textureSize(shadow_map, 0);
     for(int x = -1; x <= 1; ++x)

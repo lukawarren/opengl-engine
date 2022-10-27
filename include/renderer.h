@@ -40,4 +40,6 @@ private:
     QuadShader quad_shader;
     TerrainShader terrain_shader;
     ShadowMapShader shadow_shader;
+
+    bool did_bake_shadows = false;
 };
