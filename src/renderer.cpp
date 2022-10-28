@@ -5,7 +5,7 @@
 Renderer::Renderer(const std::string& title, const int width, const int height, const float render_scale) :
     window(title, width, height),
     render_scale(render_scale),
-    volumetric_framebuffer(render_width(), render_height()),
+    volumetric_framebuffer(render_width() * VOLUMETRIC_RESOLUTION, render_height() * VOLUMETRIC_RESOLUTION),
     output_framebuffer(render_width(), render_height(), Framebuffer::DepthSettings::ENABLE_DEPTH)
 {
     // Setup GL state
@@ -40,9 +40,11 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     terrain_shader.set_uniform("diffuse_map", 0);
     terrain_shader.set_uniform("shadow_map", 2);
     volumetrics_shader.bind();
-    volumetrics_shader.set_uniform("image", 0);
-    volumetrics_shader.set_uniform("depth_map", 1);
-    volumetrics_shader.set_uniform("shadow_map", 2);
+    volumetrics_shader.set_uniform("depth_map", 0);
+    volumetrics_shader.set_uniform("shadow_map", 1);
+    composite_shader.bind();
+    composite_shader.set_uniform("image_one", 0);
+    composite_shader.set_uniform("image_two", 1);
 
     init_resources();
 }
@@ -70,17 +72,16 @@ bool Renderer::update(const Scene& scene)
         quad_mesh->bind();
         volumetrics_pass(scene);
 
-        // Display scaled output
+        // Display scaled output...
         glViewport(0, 0, window.framebuffer_width, window.framebuffer_height);
-            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-            if (!window.get_key(GLFW_KEY_N))
-                volumetric_framebuffer.colour_texture->bind();
-            else
-                output_framebuffer.colour_texture->bind();
+        // ...combining FBOs
+        composite_shader.bind();
+        output_framebuffer.colour_texture->bind();
+        volumetric_framebuffer.colour_texture->bind(1);
+        quad_mesh->draw();
 
-            quad_shader.bind();
-            quad_mesh->draw();
         glViewport(0, 0, render_width(), render_height());
     glEnable(GL_CULL_FACE);
 
@@ -278,13 +279,21 @@ void Renderer::shadow_pass(const Scene& scene)
 
 void Renderer::volumetrics_pass(const Scene& scene)
 {
+    auto start = glfwGetTime();
+
+    // Setup framebuffer
     volumetric_framebuffer.bind();
+    glViewport(
+        0,
+        0,
+        render_width() * VOLUMETRIC_RESOLUTION,
+        render_height() * VOLUMETRIC_RESOLUTION
+    );
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
     // Textures
-    output_framebuffer.colour_texture->bind(0);
-    output_framebuffer.depth_map->bind(1);
-    scene.sun.shadow_buffer->depth_map->bind(2);
+    output_framebuffer.depth_map->bind(0);
+    scene.sun.shadow_buffer->depth_map->bind(1);
 
     // Uniforms
     const auto view = scene.camera.view_matrix();
@@ -296,7 +305,12 @@ void Renderer::volumetrics_pass(const Scene& scene)
     volumetrics_shader.set_uniform("light_colour", scene.sun.colour);
     quad_mesh->draw();
 
+    // Restore
     volumetric_framebuffer.unbind();
+    glViewport(0, 0, render_width(), render_height());
+    glFinish();
+    auto end = glfwGetTime();
+    std::cout << (end - start) * 1000 << std::endl;
 }
 
 unsigned int Renderer::render_width() const

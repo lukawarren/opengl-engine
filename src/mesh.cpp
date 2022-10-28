@@ -18,10 +18,10 @@ const std::vector<unsigned int> quad_indices =
 
 const std::vector<float> quad_texture_coords =
 {
-    1.0f, -1.0f,
-    1.0f,  0.0f,
-    0.0f,  0.0f,
-    0.0f, -1.0f
+    1.0f, 1.0f,
+    1.0f, 0.0f,
+    0.0f, 0.0f,
+    0.0f, 1.0f
 };
 
 Mesh::Mesh(

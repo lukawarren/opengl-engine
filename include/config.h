@@ -4,3 +4,4 @@
 #define REFLECTION_RESOLUTION 1024
 #define DEBUG true
 #define VSYNC true
+#define VOLUMETRIC_RESOLUTION 0.25

@@ -43,6 +43,7 @@ private:
     TerrainShader terrain_shader;
     ShadowMapShader shadow_shader;
     VolumetricsShader volumetrics_shader;
+    CompositeShader composite_shader;
 
     bool did_bake_shadows = false;
 };
