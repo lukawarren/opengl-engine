@@ -43,9 +43,9 @@ public:
         );
     }
 
-    void update()
+    void update(float amount)
     {
-        time += 0.0008f / 2.0f;
+        time += amount;
     }
 
     Transform transform;

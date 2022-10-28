@@ -20,11 +20,17 @@ int main()
     // Seutp scene
     Scene scene = sponza_scene();
     auto* camera = &scene.camera;
+    double time = glfwGetTime();
 
     while (renderer.update(scene))
     {
+        // Delta time
+        const double new_time = glfwGetTime();
+        const double delta = new_time - time;
+        time = new_time;
+
         // Water waves
-        for (auto& water : scene.waters) water.update();
+        for (auto& water : scene.waters) water.update(delta / 10.0f);
 
         // Deal with mouse grabbinig
         if (window.get_key(GLFW_KEY_ESCAPE))
@@ -43,7 +49,7 @@ int main()
         if (!captured) continue;
 
         // WASD
-        const float speed = 0.04f;
+        const float speed = 4.0f * delta;
         glm::vec3 movement = {};
         if (window.get_key(GLFW_KEY_W)) movement.z += 1.0f;
         if (window.get_key(GLFW_KEY_S)) movement.z -= 1.0f;
@@ -59,11 +65,11 @@ int main()
         if (window.get_key(GLFW_KEY_LEFT_SHIFT)) camera->position.y -= 1.0f * speed;
 
         // Mouse
-        glm::vec2 delta = window.mouse_position() - mouse_position;
+        glm::vec2 mouse_movement = window.mouse_position() - mouse_position;
         mouse_position = window.mouse_position();
         const float sensitivity = 0.1f;
-        camera->yaw += delta.x * sensitivity;
-        camera->pitch += delta.y * sensitivity;
+        camera->yaw += mouse_movement.x * sensitivity;
+        camera->pitch += mouse_movement.y * sensitivity;
 
         // Confine rotation
         camera->pitch = std::max(std::min(camera->pitch, 90.0f), -90.0f);

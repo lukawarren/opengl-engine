@@ -66,7 +66,6 @@ bool Renderer::update(const Scene& scene)
     output_framebuffer.unbind();
 
     glDisable(GL_CULL_FACE);
-
         // Post processing
         quad_mesh->bind();
         volumetrics_pass(scene);

@@ -91,9 +91,9 @@ void Window::init_glfw(const std::string& name)
     // Get *framebuffer* size (may differ on retina displays, etc.)
     glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
 
-    // Bind window to OpenGL context and enable vsync
+    // Bind window to OpenGL context and setup vsync
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(1);
+    glfwSwapInterval(VSYNC);
 }
 
 void Window::init_glad()
