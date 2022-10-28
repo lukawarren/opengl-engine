@@ -21,5 +21,5 @@ void main()
     out_from_light = world_space.xyz - light_position;
     out_clip_space = projection * view * world_space;
     gl_Position = out_clip_space;
-    out_texture_coord = texture_coord * 3; // Tiling du/dv map
+    out_texture_coord = texture_coord * 6; // Tiling du/dv map
 }

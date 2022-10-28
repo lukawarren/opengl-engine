@@ -105,7 +105,7 @@ Scene sponza_scene()
     Scene scene =
     {
         .entities = { Entity("sponza/sponza.gltf"), Entity("cube.obj") },
-        .waters = {},
+        .waters = { Water() },
         .terrains = {},
         .sun = { { 0.15f, 1.0f, 0.3f }, { 255.0 / 255.0, 255.0 / 255.0, 219.0 / 255.0 } },
         .camera = Camera({ -6.0f, 3.5f, 0.0f }, 30.0f, 90.0f, 0.0f)
@@ -121,6 +121,8 @@ Scene sponza_scene()
 
     auto* cube = &scene.entities[1];
     cube->transform.position.y = 5;
+
+    scene.waters[0].transform.scale = glm::vec3(20.0f);
 
     return scene;
 }
