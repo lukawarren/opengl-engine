@@ -28,10 +28,12 @@ private:
     void water_pass(const Scene& scene);
     void shadow_pass(const Scene& scene);
     void volumetrics_pass(const Scene& scene);
+    void blur_pass(unsigned int texture_id);
 
     // Output
     float render_scale;
     Framebuffer volumetric_framebuffer;
+    Framebuffer blur_framebuffers[2];
     Framebuffer output_framebuffer;
     unsigned int render_width() const;
     unsigned int render_height() const;
@@ -44,6 +46,7 @@ private:
     ShadowMapShader shadow_shader;
     VolumetricsShader volumetrics_shader;
     CompositeShader composite_shader;
+    BlurShader blur_shader;
 
     bool did_bake_shadows = false;
 };

@@ -6,6 +6,10 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     window(title, width, height),
     render_scale(render_scale),
     volumetric_framebuffer(render_width() * VOLUMETRIC_RESOLUTION, render_height() * VOLUMETRIC_RESOLUTION),
+    blur_framebuffers {
+        Framebuffer(render_width(), render_height()),
+        Framebuffer(render_width(), render_height())
+    },
     output_framebuffer(render_width(), render_height(), Framebuffer::DepthSettings::ENABLE_DEPTH)
 {
     // Setup GL state
@@ -67,22 +71,22 @@ bool Renderer::update(const Scene& scene)
     water_pass(scene);
     output_framebuffer.unbind();
 
+    // Post processing
     glDisable(GL_CULL_FACE);
-        // Post processing
-        quad_mesh->bind();
-        volumetrics_pass(scene);
+    quad_mesh->bind();
+    volumetrics_pass(scene);
 
-        // Display scaled output...
-        glViewport(0, 0, window.framebuffer_width, window.framebuffer_height);
-        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+    // Display scaled output...
+    glViewport(0, 0, window.framebuffer_width, window.framebuffer_height);
+    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-        // ...combining FBOs
-        composite_shader.bind();
-        output_framebuffer.colour_texture->bind();
-        volumetric_framebuffer.colour_texture->bind(1);
-        quad_mesh->draw();
+    // ...combining FBOs
+    composite_shader.bind();
+    output_framebuffer.colour_texture->bind();
+    volumetric_framebuffer.colour_texture->bind(1);
+    quad_mesh->draw();
 
-        glViewport(0, 0, render_width(), render_height());
+    glViewport(0, 0, render_width(), render_height());
     glEnable(GL_CULL_FACE);
 
     return true;
@@ -308,9 +312,18 @@ void Renderer::volumetrics_pass(const Scene& scene)
     // Restore
     volumetric_framebuffer.unbind();
     glViewport(0, 0, render_width(), render_height());
+
+    // Blur
+    blur_pass(volumetric_framebuffer.colour_texture->texture_id);
+
     glFinish();
     auto end = glfwGetTime();
     std::cout << (end - start) * 1000 << std::endl;
+}
+
+void Renderer::blur_pass(unsigned int texture_id)
+{
+
 }
 
 unsigned int Renderer::render_width() const
