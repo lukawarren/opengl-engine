@@ -28,7 +28,7 @@ private:
     void water_pass(const Scene& scene);
     void shadow_pass(const Scene& scene);
     void volumetrics_pass(const Scene& scene);
-    void blur_pass(unsigned int texture_id);
+    void blur_pass(const Texture& texture);
 
     // Output
     float render_scale;

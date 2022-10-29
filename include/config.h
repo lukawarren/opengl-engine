@@ -1,7 +1,7 @@
 #pragma once
 #define BAKE_SHADOWMAPS true
-#define SHADOWMAP_RESOLUTION 8192
+#define SHADOWMAP_RESOLUTION 2048
 #define REFLECTION_RESOLUTION 1024
 #define DEBUG true
-#define VSYNC true
+#define VSYNC false
 #define VOLUMETRIC_RESOLUTION 0.25

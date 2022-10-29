@@ -11,11 +11,12 @@ public:
     ~Window();
 
     bool update();
+    void set_title(const std::string& title) const;
 
+    // I/O
     bool get_key(int key) const;
     bool get_mouse_button(int button) const;
     glm::vec2 mouse_position() const;
-
     void capture_mouse() const;
     void uncapture_mouse() const;
 

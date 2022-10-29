@@ -21,9 +21,19 @@ Window::Window(const std::string& name, const int _width, const int _height) :
 
 bool Window::update()
 {
+#ifdef __APPLE__
+    // Fix stuttering
+    glFinish();
+#endif
+
     glfwSwapBuffers(window);
     glfwPollEvents();
     return !glfwWindowShouldClose(window);
+}
+
+void Window::set_title(const std::string& title) const
+{
+    glfwSetWindowTitle(window, title.c_str());
 }
 
 bool Window::get_key(int key) const

@@ -56,6 +56,7 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
 bool Renderer::update(const Scene& scene)
 {
     // Update window; poll events
+    double start = glfwGetTime();
     if (!window.update()) return false;
 
     // Shadows
@@ -83,11 +84,16 @@ bool Renderer::update(const Scene& scene)
     // ...combining FBOs
     composite_shader.bind();
     output_framebuffer.colour_texture->bind();
-    volumetric_framebuffer.colour_texture->bind(1);
+    blur_framebuffers[1].colour_texture->bind(1);
     quad_mesh->draw();
 
     glViewport(0, 0, render_width(), render_height());
     glEnable(GL_CULL_FACE);
+
+    // Calculate FPS
+    double end = glfwGetTime();
+    int fps = int(1.0 / (end - start));
+    window.set_title(std::to_string(fps) + " FPS");
 
     return true;
 }
@@ -283,8 +289,6 @@ void Renderer::shadow_pass(const Scene& scene)
 
 void Renderer::volumetrics_pass(const Scene& scene)
 {
-    auto start = glfwGetTime();
-
     // Setup framebuffer
     volumetric_framebuffer.bind();
     glViewport(
@@ -314,16 +318,40 @@ void Renderer::volumetrics_pass(const Scene& scene)
     glViewport(0, 0, render_width(), render_height());
 
     // Blur
-    blur_pass(volumetric_framebuffer.colour_texture->texture_id);
-
-    glFinish();
-    auto end = glfwGetTime();
-    std::cout << (end - start) * 1000 << std::endl;
+    blur_pass(*volumetric_framebuffer.colour_texture);
 }
 
-void Renderer::blur_pass(unsigned int texture_id)
+void Renderer::blur_pass(const Texture& texture)
 {
+    blur_shader.bind();
 
+    // Horizontal
+    texture.bind();
+    blur_framebuffers[0].bind();
+    blur_shader.set_uniform("horizontal", true);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    quad_mesh->draw();
+
+    // Vertical
+    blur_framebuffers[1].bind();
+    blur_framebuffers[0].colour_texture->bind();
+    blur_shader.set_uniform("horizontal", false);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    quad_mesh->draw();
+
+    blur_framebuffers[0].bind();
+    blur_framebuffers[1].colour_texture->bind();
+    blur_shader.set_uniform("horizontal", true);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    quad_mesh->draw();
+
+    blur_framebuffers[1].bind();
+    blur_framebuffers[0].colour_texture->bind();
+    blur_shader.set_uniform("horizontal", false);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    quad_mesh->draw();
+
+    blur_framebuffers[1].unbind();
 }
 
 unsigned int Renderer::render_width() const
