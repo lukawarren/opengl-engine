@@ -15,7 +15,7 @@ struct Scene
 
     // Lighting
     DirectionalLight sun = {};
-    glm::vec3 ambient_light = { 0.3f, 0.3f, 0.3f };
+    glm::vec3 ambient_light = { 0.1f, 0.1f, 0.1f };
 
     Camera camera = {};
 };

@@ -10,7 +10,13 @@ Framebuffer::Framebuffer(const unsigned int width, const unsigned int height, co
     // Add colour attachment (if need be)
     if (depth_settings != DepthSettings::ONLY_DEPTH)
     {
-        this->colour_texture.emplace(width, height);
+        this->colour_texture.emplace(
+            width,
+            height,
+            GL_RGBA16F, // HDR
+            GL_RGBA,    // HDR
+            GL_FLOAT    // HDR
+        );
         glFramebufferTexture2D(
             GL_FRAMEBUFFER,
             GL_COLOR_ATTACHMENT0,
@@ -28,7 +34,13 @@ Framebuffer::Framebuffer(const unsigned int width, const unsigned int height, co
     if (depth_settings != DepthSettings::NO_DEPTH)
     {
         // Create depth buffer
-        this->depth_map.emplace(width, height, GL_DEPTH_COMPONENT, GL_FLOAT);
+        this->depth_map.emplace(
+            width,
+            height,
+            GL_DEPTH_COMPONENT24,
+            GL_DEPTH_STENCIL,
+            GL_UNSIGNED_INT_24_8
+        );
         this->depth_map->clamp(glm::vec4(0.0f));
         glFramebufferTexture2D(
             GL_FRAMEBUFFER,
@@ -57,7 +69,8 @@ Framebuffer::Framebuffer(const unsigned int width, const unsigned int height, co
     }
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        throw std::runtime_error("incomplete framebuffer");
+        throw std::runtime_error("incomplete framebuffer - " +
+            std::to_string(glCheckFramebufferStatus(GL_FRAMEBUFFER)));
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     this->width = width;

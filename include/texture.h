@@ -13,7 +13,8 @@ public:
         const unsigned int width,
         const unsigned int height,
         const unsigned int internal_format = GL_RGB,
-        const unsigned int format = GL_UNSIGNED_BYTE);
+        const unsigned int format = GL_RGB,
+        const unsigned int type = GL_UNSIGNED_BYTE);
 
     Texture(const Texture&) = delete;
     ~Texture();

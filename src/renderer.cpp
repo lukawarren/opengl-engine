@@ -81,7 +81,7 @@ bool Renderer::update(const Scene& scene)
     glViewport(0, 0, window.framebuffer_width, window.framebuffer_height);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-    // ...combining FBOs
+    // ...combining FBOs (with HDR pass)
     composite_shader.bind();
     output_framebuffer.colour_texture->bind();
     blur_framebuffers[1].colour_texture->bind(1);

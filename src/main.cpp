@@ -113,11 +113,12 @@ Scene sponza_scene()
         .entities = { Entity("sponza/sponza.gltf"), Entity("cube.obj") },
         .waters = { Water() },
         .terrains = {},
-        .sun = { { 0.15f, 1.0f, 0.3f }, { 255.0 / 255.0, 255.0 / 255.0, 219.0 / 255.0 } },
+        .sun = { { 0.15f, 1.0f, 0.3f }, { 255.0 / 255.0, 255.0 / 255.0, 200.0 / 255.0 } },
         .camera = Camera({ -6.0f, 3.5f, 0.0f }, 30.0f, 90.0f, 0.0f)
     };
 
     scene.sun.position *= 20.0f;
+    scene.sun.colour *= 1.0f;
 
     auto* sponza = &scene.entities[0];
     sponza->transform.scale = glm::vec3(0.01f);
