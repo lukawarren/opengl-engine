@@ -1,15 +1,15 @@
 #include "renderer.h"
 #include <iostream>
 
-constexpr int width = 800;
-constexpr int height = 600;
+constexpr int width = 1600;
+constexpr int height = 900;
 
 Scene terrain_scene();
 Scene sponza_scene();
 
 int main()
 {
-    Renderer renderer("New window", width, height, 0.5);
+    Renderer renderer("New window", width, height, 1.0);
     Window& window = renderer.window;
     window.capture_mouse();
 
@@ -111,7 +111,7 @@ Scene sponza_scene()
     Scene scene =
     {
         .entities = { Entity("sponza/sponza.gltf"), Entity("cube.obj") },
-        .waters = { Water() },
+        .waters = {},
         .terrains = {},
         .sun = { { 0.15f, 1.0f, 0.3f }, { 255.0 / 255.0, 255.0 / 255.0, 200.0 / 255.0 } },
         .camera = Camera({ -6.0f, 3.5f, 0.0f }, 30.0f, 90.0f, 0.0f)
@@ -128,8 +128,6 @@ Scene sponza_scene()
 
     auto* cube = &scene.entities[1];
     cube->transform.position.y = 5;
-
-    scene.waters[0].transform.scale = glm::vec3(20.0f);
 
     return scene;
 }

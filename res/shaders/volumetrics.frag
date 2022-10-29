@@ -2,9 +2,9 @@
 
 in vec2 out_texture_coord;
 
-const int SAMPLES = 15;
-const float intensity = 12.0;
-const float scattering = 0.5;
+const int SAMPLES = 50;
+const float intensity = 4.0;
+const float scattering = 0.05;
 const float pi = 3.14159265358979;
 
 // 4x4 bayer matrix to add noise (lets us get away with less samples)
