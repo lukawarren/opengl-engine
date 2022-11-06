@@ -3,5 +3,5 @@
 #define SHADOWMAP_RESOLUTION 4096
 #define REFLECTION_RESOLUTION 1024
 #define DEBUG true
-#define VSYNC false
+#define VSYNC true
 #define VOLUMETRIC_RESOLUTION 0.25

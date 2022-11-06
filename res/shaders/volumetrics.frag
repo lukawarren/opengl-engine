@@ -3,7 +3,7 @@
 in vec2 out_texture_coord;
 
 const int SAMPLES = 50;
-const float intensity = 4.0;
+const float intensity = 1.0;
 const float scattering = 0.05;
 const float pi = 3.14159265358979;
 

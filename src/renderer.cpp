@@ -5,6 +5,7 @@
 Renderer::Renderer(const std::string& title, const int width, const int height, const float render_scale) :
     window(title, width, height),
     render_scale(render_scale),
+    bloom_framebuffer(render_width(), render_height()),
     volumetric_framebuffer(render_width() * VOLUMETRIC_RESOLUTION, render_height() * VOLUMETRIC_RESOLUTION),
     blur_framebuffers {
         Framebuffer(render_width(), render_height()),
@@ -49,6 +50,11 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     composite_shader.bind();
     composite_shader.set_uniform("image_one", 0);
     composite_shader.set_uniform("image_two", 1);
+    composite_shader.set_uniform("image_three", 2);
+
+    // Post processing settings
+    bloom_shader.bind();
+    bloom_shader.set_uniform("threshold", 1.3f);
 
     init_resources();
 }
@@ -75,6 +81,7 @@ bool Renderer::update(const Scene& scene)
     // Post processing
     glDisable(GL_CULL_FACE);
     quad_mesh->bind();
+    bloom_pass();
     volumetrics_pass(scene);
 
     // Display scaled output...
@@ -84,7 +91,8 @@ bool Renderer::update(const Scene& scene)
     // ...combining FBOs (with HDR pass)
     composite_shader.bind();
     output_framebuffer.colour_texture->bind();
-    blur_framebuffers[1].colour_texture->bind(1);
+    blur_framebuffers[1].colour_texture->bind(1); // volumetrics
+    bloom_framebuffer.colour_texture->bind(2); // bloom
     quad_mesh->draw();
 
     glViewport(0, 0, render_width(), render_height());
@@ -287,6 +295,23 @@ void Renderer::shadow_pass(const Scene& scene)
     glViewport(0, 0, render_width(), render_height());
 }
 
+void Renderer::bloom_pass()
+{
+    // Setup framebuffer
+    bloom_framebuffer.bind();
+    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+    // Extract bright parts of image
+    output_framebuffer.colour_texture->bind();
+    bloom_shader.bind();
+    quad_mesh->draw();
+    bloom_framebuffer.unbind();
+
+    // Blur
+    for (int i = 0; i < 5; ++i)
+        blur_pass(*bloom_framebuffer.colour_texture, bloom_framebuffer);
+}
+
 void Renderer::volumetrics_pass(const Scene& scene)
 {
     // Setup framebuffer
@@ -318,40 +343,42 @@ void Renderer::volumetrics_pass(const Scene& scene)
     glViewport(0, 0, render_width(), render_height());
 
     // Blur
-    blur_pass(*volumetric_framebuffer.colour_texture);
+    blur_pass(*volumetric_framebuffer.colour_texture, blur_framebuffers[1]);
 }
 
-void Renderer::blur_pass(const Texture& texture)
+void Renderer::blur_pass(const Texture& texture, const Framebuffer& final_framebuffer)
 {
     blur_shader.bind();
+
+    // Cheaper to just disable depth tests instead of clearing every time
+    glDisable(GL_DEPTH_TEST);
 
     // Horizontal
     texture.bind();
     blur_framebuffers[0].bind();
     blur_shader.set_uniform("horizontal", true);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     quad_mesh->draw();
 
     // Vertical
     blur_framebuffers[1].bind();
     blur_framebuffers[0].colour_texture->bind();
     blur_shader.set_uniform("horizontal", false);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     quad_mesh->draw();
 
+    // Horizontal
     blur_framebuffers[0].bind();
     blur_framebuffers[1].colour_texture->bind();
     blur_shader.set_uniform("horizontal", true);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     quad_mesh->draw();
 
-    blur_framebuffers[1].bind();
+    // Final vertical
+    final_framebuffer.bind();
     blur_framebuffers[0].colour_texture->bind();
     blur_shader.set_uniform("horizontal", false);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     quad_mesh->draw();
+    final_framebuffer.unbind();
 
-    blur_framebuffers[1].unbind();
+    glEnable(GL_DEPTH_TEST);
 }
 
 unsigned int Renderer::render_width() const

@@ -42,7 +42,7 @@ float get_shadow(vec4 lightspace_position)
 
             // Finally sample depth (i.e. the important bit)
             // NOTE: 0.3 is used instead of 0.0 to provide ambient lighting
-            shadow += current_depth - bias > pcf_depth ? 0.3 : 1.0;
+            shadow += current_depth - bias > pcf_depth ? 0.1 : 1.0;
         }
     }
 
