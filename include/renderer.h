@@ -28,13 +28,11 @@ private:
     void water_pass(const Scene& scene);
     void shadow_pass(const Scene& scene);
     void bloom_pass();
-    void volumetrics_pass(const Scene& scene);
     void blur_pass(const Texture& texture, const Framebuffer& final_framebuffer);
 
     // Output
     float render_scale;
     Framebuffer bloom_framebuffer;
-    Framebuffer volumetric_framebuffer;
     Framebuffer blur_framebuffers[2];
     Framebuffer output_framebuffer;
     unsigned int render_width() const;
@@ -44,9 +42,7 @@ private:
     DiffuseShader diffuse_shader;
     WaterShader water_shader;
     QuadShader quad_shader;
-    TerrainShader terrain_shader;
     ShadowMapShader shadow_shader;
-    VolumetricsShader volumetrics_shader;
     CompositeShader composite_shader;
     BlurShader blur_shader;
     BloomShader bloom_shader;

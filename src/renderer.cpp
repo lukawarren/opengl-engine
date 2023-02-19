@@ -6,7 +6,6 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     window(title, width, height),
     render_scale(render_scale),
     bloom_framebuffer(render_width(), render_height()),
-    volumetric_framebuffer(render_width() * VOLUMETRIC_RESOLUTION, render_height() * VOLUMETRIC_RESOLUTION),
     blur_framebuffers {
         Framebuffer(render_width(), render_height()),
         Framebuffer(render_width(), render_height())
@@ -41,20 +40,13 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     diffuse_shader.set_uniform("diffuse_map", 0);
     diffuse_shader.set_uniform("normal_map", 1);
     diffuse_shader.set_uniform("shadow_map", 2);
-    terrain_shader.bind();
-    terrain_shader.set_uniform("diffuse_map", 0);
-    terrain_shader.set_uniform("shadow_map", 2);
-    volumetrics_shader.bind();
-    volumetrics_shader.set_uniform("depth_map", 0);
-    volumetrics_shader.set_uniform("shadow_map", 1);
     composite_shader.bind();
     composite_shader.set_uniform("image_one", 0);
     composite_shader.set_uniform("image_two", 1);
-    composite_shader.set_uniform("image_three", 2);
 
     // Post processing settings
     bloom_shader.bind();
-    bloom_shader.set_uniform("threshold", 1.3f);
+    bloom_shader.set_uniform("threshold", 1.0f);
 
     init_resources();
 }
@@ -82,7 +74,6 @@ bool Renderer::update(const Scene& scene)
     glDisable(GL_CULL_FACE);
     quad_mesh->bind();
     bloom_pass();
-    volumetrics_pass(scene);
 
     // Display scaled output...
     glViewport(0, 0, window.framebuffer_width, window.framebuffer_height);
@@ -91,8 +82,7 @@ bool Renderer::update(const Scene& scene)
     // ...combining FBOs (with HDR pass)
     composite_shader.bind();
     output_framebuffer.colour_texture->bind();
-    blur_framebuffers[1].colour_texture->bind(1); // volumetrics
-    bloom_framebuffer.colour_texture->bind(2); // bloom
+    bloom_framebuffer.colour_texture->bind(1); // bloom
     quad_mesh->draw();
 
     glViewport(0, 0, render_width(), render_height());
@@ -153,25 +143,11 @@ void Renderer::diffuse_pass(
         }
     };
 
-    const auto terrain = [&]()
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        set_common_uniforms(terrain_shader);
-
-        for (const auto& terrain : scene.terrains)
-        {
-            terrain_shader.set_uniform("model", terrain.transform.matrix());
-            terrain.texture->bind();
-            terrain.mesh->bind();
-            terrain.mesh->draw();
-        }
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    };
-
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
     scene.sun.shadow_buffer->depth_map->bind(2);
     entities();
-    terrain();
+
+    // Add other generic diffuse passes here :)
 }
 
 void Renderer::water_pass(const Scene& scene)
@@ -281,17 +257,9 @@ void Renderer::shadow_pass(const Scene& scene)
         }
     }
 
-    // Render terrain (disable peter panning as it won't work for completely thin surfaces)
-    glCullFace(GL_BACK);
-    for (const auto& terrain : scene.terrains)
-    {
-        shadow_shader.set_uniform("mvp", view_projection * terrain.transform.matrix());
-        terrain.mesh->bind();
-        terrain.mesh->draw();
-    }
-
     // Restore
     buffer->unbind();
+    glCullFace(GL_BACK);
     glViewport(0, 0, render_width(), render_height());
 }
 
@@ -310,40 +278,6 @@ void Renderer::bloom_pass()
     // Blur
     for (int i = 0; i < 5; ++i)
         blur_pass(*bloom_framebuffer.colour_texture, bloom_framebuffer);
-}
-
-void Renderer::volumetrics_pass(const Scene& scene)
-{
-    // Setup framebuffer
-    volumetric_framebuffer.bind();
-    glViewport(
-        0,
-        0,
-        render_width() * VOLUMETRIC_RESOLUTION,
-        render_height() * VOLUMETRIC_RESOLUTION
-    );
-    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
-    // Textures
-    output_framebuffer.depth_map->bind(0);
-    scene.sun.shadow_buffer->depth_map->bind(1);
-
-    // Uniforms
-    const auto view = scene.camera.view_matrix();
-    const auto projection = scene.camera.projection_matrix(render_width(), render_height());
-    volumetrics_shader.bind();
-    volumetrics_shader.set_uniform("inverse_view", glm::inverse(view));
-    volumetrics_shader.set_uniform("inverse_projection", glm::inverse(projection));
-    volumetrics_shader.set_uniform("lightspace", scene.sun.get_light_projection_matrix());
-    volumetrics_shader.set_uniform("light_colour", scene.sun.colour);
-    quad_mesh->draw();
-
-    // Restore
-    volumetric_framebuffer.unbind();
-    glViewport(0, 0, render_width(), render_height());
-
-    // Blur
-    blur_pass(*volumetric_framebuffer.colour_texture, blur_framebuffers[1]);
 }
 
 void Renderer::blur_pass(const Texture& texture, const Framebuffer& final_framebuffer)

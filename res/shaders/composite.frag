@@ -3,7 +3,6 @@
 in vec2 out_texture_coord;
 uniform sampler2D image_one;
 uniform sampler2D image_two;
-uniform sampler2D image_three;
 layout (location = 0) out vec4 frag_colour;
 
 const float gamma = 2.2;
@@ -24,8 +23,7 @@ void main()
     vec2 uv = out_texture_coord;
     vec3 hdr_one = texture(image_one, uv).xyz;
     vec3 hdr_two = texture(image_two, uv).xyz;
-    vec3 hdr_three = texture(image_three, uv).xyz;
-    vec3 hdr = hdr_one + hdr_two + hdr_three;
+    vec3 hdr = hdr_one + hdr_two;
 
     // Exposure tone mapping + gamma correction
     vec3 mapped = map_hdr(hdr);

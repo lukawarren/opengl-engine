@@ -4,12 +4,11 @@
 constexpr int width = 1600;
 constexpr int height = 900;
 
-Scene terrain_scene();
 Scene sponza_scene();
 
 int main()
 {
-    Renderer renderer("New window", width, height, 1.0);
+    Renderer renderer("lukacraft", width, height, 1.0);
     Window& window = renderer.window;
     window.capture_mouse();
 
@@ -32,7 +31,7 @@ int main()
         // Water waves
         for (auto& water : scene.waters) water.update(delta / 10.0f);
 
-        // Deal with mouse grabbinig
+        // Deal with mouse grabbing
         if (window.get_key(GLFW_KEY_ESCAPE))
         {
             window.uncapture_mouse();
@@ -78,47 +77,18 @@ int main()
     return 0;
 }
 
-Scene terrain_scene()
-{
-    Scene scene =
-    {
-        .entities = { Entity("cube.obj"), Entity("pool/pool.glb") },
-        .waters = { Water() },
-        .terrains = { Terrain("terrain/diffuse.png", "terrain/height_map.png") },
-        .sun = { { 50.0f, 80.0f, 25.0f }, { 1.0f, 1.0f, 1.3f } },
-        .camera = Camera({ -6.0f, 3.5f, 0.0f }, 30.0f, 90.0f, 0.0f)
-    };
-
-    auto* sponza = &scene.entities[2];
-    auto* pool = &scene.entities[1];
-    auto* water = &scene.waters[0];
-    auto* terrain = &scene.terrains[0];
-
-    pool->transform.scale = glm::vec3(5.0f);
-    pool->transform.position = glm::vec3(0.0f, 0.1f, 0.0f);
-    water->transform.scale = glm::vec3(4.3f);
-    terrain->transform.position.y = -20;
-
-    sponza->transform.scale = glm::vec3(0.03f);
-    sponza->transform.position.y = -1;
-    sponza->transform.position.z = 1;
-
-    return scene;
-}
-
 Scene sponza_scene()
 {
     Scene scene =
     {
         .entities = { Entity("sponza/sponza.gltf"), Entity("cube.obj") },
         .waters = {},
-        .terrains = {},
         .sun = { { 0.18f, 1.0f, 0.3f }, { 255.0 / 255.0, 255.0 / 255.0, 200.0 / 255.0 } },
         .camera = Camera({ -6.0f, 3.5f, 0.0f }, 30.0f, 90.0f, 0.0f)
     };
 
     scene.sun.position *= 20.0f;
-    scene.sun.colour *= 4.0f;
+    scene.sun.colour *= 1.5f;
 
     auto* sponza = &scene.entities[0];
     sponza->transform.scale = glm::vec3(0.01f);
