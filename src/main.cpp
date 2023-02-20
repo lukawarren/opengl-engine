@@ -4,6 +4,7 @@
 constexpr int width = 1600;
 constexpr int height = 900;
 
+Scene chunk_scene();
 Scene sponza_scene();
 
 int main()
@@ -17,7 +18,7 @@ int main()
     glm::vec2 mouse_position = window.mouse_position();
 
     // Seutp scene
-    Scene scene = sponza_scene();
+    Scene scene = chunk_scene();
     auto* camera = &scene.camera;
     double time = glfwGetTime();
 
@@ -75,6 +76,28 @@ int main()
     }
 
     return 0;
+}
+
+Scene chunk_scene()
+{
+    Scene scene =
+    {
+        .chunks = {},
+        .entities = {},
+        .waters = {},
+        .sun = { { 0.18f, 1.0f, 0.3f }, { 255.0 / 255.0, 255.0 / 255.0, 200.0 / 255.0 } },
+        .camera = Camera({ 0.0f, 0.0f, 5.0f }, 30.0f, 0.0f, 0.0f)
+    };
+
+    scene.sun.position *= 20.0f;
+    scene.sun.colour *= 1.5f;
+
+    //for (int x = 0; x < 16; ++x)
+    //for (int z = 0; z < 16; ++z)
+    //scene.chunks.emplace_back(x, 0, z);
+    scene.chunks.emplace_back(glm::ivec3 {0,0,0});
+
+    return scene;
 }
 
 Scene sponza_scene()

@@ -143,11 +143,26 @@ void Renderer::diffuse_pass(
         }
     };
 
+    const auto chunks = [&]()
+    {
+        set_common_uniforms(diffuse_shader);
+        Chunk::texture->bind();
+
+        // TODO: sort by least-expensive state-change
+        for (const auto& chunk : scene.chunks)
+        {
+            diffuse_shader.set_uniform("model", chunk.transform.matrix());
+            chunk.mesh->bind();
+            chunk.mesh->draw();
+        }
+    };
+
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
     scene.sun.shadow_buffer->depth_map->bind(2);
+    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     entities();
-
-    // Add other generic diffuse passes here :)
+    chunks();
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 }
 
 void Renderer::water_pass(const Scene& scene)
@@ -256,6 +271,8 @@ void Renderer::shadow_pass(const Scene& scene)
             mesh.mesh->draw();
         }
     }
+
+    // TODO: render chunks
 
     // Restore
     buffer->unbind();
