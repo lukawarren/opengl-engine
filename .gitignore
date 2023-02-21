@@ -7,5 +7,7 @@ res/assets/sponza/
 res/assets/water/
 res/assets/pool/
 res/assets/terrain/
+res/assets/monkey.obj
+res/assets/grass.png
 .DS_Store
 */.DS_Store

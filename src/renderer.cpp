@@ -159,10 +159,8 @@ void Renderer::diffuse_pass(
 
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
     scene.sun.shadow_buffer->depth_map->bind(2);
-    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     entities();
     chunks();
-    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 }
 
 void Renderer::water_pass(const Scene& scene)
@@ -272,11 +270,18 @@ void Renderer::shadow_pass(const Scene& scene)
         }
     }
 
-    // TODO: render chunks
+    // Render chunks - back to normal culling!
+    glCullFace(GL_BACK);
+    Chunk::texture->bind();
+    for (const auto& chunk : scene.chunks)
+    {
+        shadow_shader.set_uniform("mvp", view_projection * chunk.transform.matrix());
+        chunk.mesh->bind();
+        chunk.mesh->draw();
+    }
 
     // Restore
     buffer->unbind();
-    glCullFace(GL_BACK);
     glViewport(0, 0, render_width(), render_height());
 }
 

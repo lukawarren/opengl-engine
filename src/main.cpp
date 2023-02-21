@@ -83,14 +83,17 @@ Scene chunk_scene()
     Scene scene =
     {
         .chunks = {},
-        .entities = {},
+        .entities = { Entity("monkey.obj") },
         .waters = {},
         .sun = { { 0.18f, 1.0f, 0.3f }, { 255.0 / 255.0, 255.0 / 255.0, 200.0 / 255.0 } },
         .camera = Camera({ 0.0f, 0.0f, 5.0f }, 30.0f, 0.0f, 0.0f)
     };
 
     scene.sun.position *= 20.0f;
-    scene.sun.colour *= 1.5f;
+    scene.sun.colour *= 0.8f;
+
+    auto& monkey = scene.entities[0];
+    monkey.transform.position = { 5, 5, 5 };
 
     //for (int x = 0; x < 16; ++x)
     //for (int z = 0; z < 16; ++z)

@@ -1,97 +1,51 @@
 #include "chunk.h"
 #include "entity.h"
-#include <array>
-#include <iostream>
-int remove_me;
+#include "chunk_faces.h"
+#include <glm/gtc/noise.hpp>
 
 Texture* Chunk::texture = nullptr;
 
-const std::array<std::vector<float>, 6> face_vertices =
-{{
-    // Top
-    {
-         0.5f, 0.5f,  0.5f,
-         0.5f, 0.5f, -0.5f,
-        -0.5f, 0.5f, -0.5f,
-        -0.5f, 0.5f,  0.5f
-    },
-
-    // Bottom
-    {
-         0.5f, -0.5f,  0.5f,
-        -0.5f, -0.5f,  0.5f,
-        -0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f
-    },
-
-    // Left
-    {
-        -0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f,  0.5f
-    },
-
-    // Right
-    {
-        0.5f,  0.5f,  0.5f,
-        0.5f, -0.5f,  0.5f,
-        0.5f, -0.5f, -0.5f,
-        0.5f,  0.5f, -0.5f
-    },
-
-    // Front
-    {
-         0.5f,  0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f,  0.5f, -0.5f
-    },
-
-    // Back
-    {
-         0.5f,  0.5f, 0.5f,
-        -0.5f,  0.5f, 0.5f,
-        -0.5f, -0.5f, 0.5f,
-         0.5f, -0.5f, 0.5f,
-    }
-}};
-
-const std::array<unsigned int, 6> face_indices =
-{
-    0, 1, 3,
-    1, 2, 3
-};
-
-const std::array<float, 8> face_texture_coords =
-{
-    1.0f, 1.0f,
-    1.0f, 0.0f,
-    0.0f, 0.0f,
-    0.0f, 1.0f
-};
-
-const std::array<glm::vec3, 6> face_normals =
-{{
-    {  0,  1,  0 }, // Top
-    {  0, -1,  0 }, // Bottom
-    { -1,  0,  0 }, // Left
-    {  1,  0,  0 }, // Right
-    {  0,  0,  1 }, // Front
-    {  0,  0, -1 }  // Back
-}};
-
 Chunk::Chunk(const glm::ivec3 position)
 {
-    if (!texture) texture = get_texture("missing_texture.png");
+    if (!texture) texture = get_texture("grass.png");
 
-    // Generate terrain
-    Block blocks[size][size][size] = {};
+    generate_blocks(position);
+    generate_mesh();
+
+    // Convert chunks-space position to world-space
+    transform.position = position * glm::ivec3 { size, size, size };
+}
+
+void Chunk::generate_blocks(const glm::ivec3 position)
+{
+    const auto get_height = [&](const int x, const int z)
+    {
+        const float height_scale = 3.0f;
+        const float noise_scale = 0.1f;
+
+        const auto val = glm::simplex(glm::vec2 {
+            position.x * size + x,
+            position.x * size + z
+        } * noise_scale);
+
+        return (val + 1.0f) / 2.0f * height_scale;
+    };
+
     for (int x = 0; x < size; ++x)
-    for (int y = 0; y < size; ++y)
-    for (int z = 0; z < size; ++z)
-    blocks[x][y][z] = (Block)(rand() % 2);
+    {
+        for (int z = 0; z < size; ++z)
+        {
+            int height = (int)get_height(x, z);
+            if (height <= 0) height = 1;
 
+            for (int y = 0; y < height; ++y)
+                blocks[x][y][z] = Block::Grass;
+        }
+    }
+}
+
+void Chunk::generate_mesh()
+{
     const auto is_solid_block = [&](int x, int y, int z)
     {
         // TODO: check against adjacent chunks
@@ -121,6 +75,8 @@ Chunk::Chunk(const glm::ivec3 position)
                         vertices.emplace_back(face[i * 3 + 0] + x);
                         vertices.emplace_back(face[i * 3 + 1] + y);
                         vertices.emplace_back(face[i * 3 + 2] + z);
+
+                        // Corresponding normals
                         normals.emplace_back(face_normals[n].x);
                         normals.emplace_back(face_normals[n].y);
                         normals.emplace_back(face_normals[n].z);
@@ -152,9 +108,6 @@ Chunk::Chunk(const glm::ivec3 position)
 
     // Upload to GPU
     mesh = std::make_shared<Mesh>(vertices, indices, texture_coordinates, normals);
-
-    // Convert chunks-space position to world-space
-    transform.position = position * glm::ivec3 { size, size, size };
 }
 
 Chunk::~Chunk()
