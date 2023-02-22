@@ -69,6 +69,23 @@ void Texture::clamp(const glm::vec4& colour) const
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void Texture::set_as_texture_atlas(const int max_mipmap_level) const
+{
+    // Prevent "bleed-in" from different textures on the atlas
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    // Limit mip-mapping so sub-textures don't go smaller than 1x1
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 4);
+
+    // Disable anisotropy
+    if (GLAD_GL_EXT_texture_filter_anisotropic)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1.0f);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 void Texture::bind(const unsigned int unit) const
 {
     glActiveTexture(GL_TEXTURE0 + unit);

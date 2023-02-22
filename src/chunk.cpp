@@ -2,12 +2,19 @@
 #include "entity.h"
 #include "chunk_faces.h"
 #include <glm/gtc/noise.hpp>
+#include <stdexcept>
 
 Texture* Chunk::texture = nullptr;
+const glm::vec2 texture_size = { 256.0f, 256.0f };
+const glm::vec2 subtexture_size = { 16.0f, 16.0f };
 
 Chunk::Chunk(const glm::ivec3 position)
 {
-    if (!texture) texture = get_texture("grass.png");
+    if (!texture)
+    {
+        texture = get_texture("blocks.png");
+        texture->set_as_texture_atlas(4);
+    }
 
     generate_blocks(position);
     generate_mesh();
@@ -18,17 +25,18 @@ Chunk::Chunk(const glm::ivec3 position)
 
 void Chunk::generate_blocks(const glm::ivec3 position)
 {
+    const auto sample_noise = [](glm::vec2 pos, float scale)
+    {
+        const auto val = glm::simplex(pos * scale);
+        return (val + 1.0f) / 2.0f;
+    };
+
     const auto get_height = [&](const int x, const int z)
     {
-        const float height_scale = 3.0f;
-        const float noise_scale = 0.1f;
-
-        const auto val = glm::simplex(glm::vec2 {
-            position.x * size + x,
-            position.x * size + z
-        } * noise_scale);
-
-        return (val + 1.0f) / 2.0f * height_scale;
+        const glm::vec2 pos = { position.x * size + x, position.z * size + z };
+        return sample_noise(pos, 0.01f) * 10.0f +
+                sample_noise(pos, 0.1f) * 3.0f +
+                sample_noise(pos, 10.0f) * 1.1f;
     };
 
     for (int x = 0; x < size; ++x)
@@ -37,9 +45,10 @@ void Chunk::generate_blocks(const glm::ivec3 position)
         {
             int height = (int)get_height(x, z);
             if (height <= 0) height = 1;
+            if (height >= size) height = size - 1;
 
             for (int y = 0; y < height; ++y)
-                blocks[x][y][z] = Block::Grass;
+                blocks[x][y][z] = (y == height-1) ? Block::Grass : Block::Dirt;
         }
     }
 }
@@ -66,7 +75,7 @@ void Chunk::generate_mesh()
         {
             for (int z = 0; z < size; ++z)
             {
-                const auto add_face = [&](int n)
+                const auto add_face = [&](int n, Block block)
                 {
                     // For vertices, add the block position to each vertex (every 3 elements)
                     const auto& face = face_vertices[n];
@@ -82,12 +91,9 @@ void Chunk::generate_mesh()
                         normals.emplace_back(face_normals[n].z);
                     }
 
-                    // Tex coords don't change
-                    texture_coordinates.insert(
-                        texture_coordinates.end(),
-                        face_texture_coords.begin(),
-                        face_texture_coords.end()
-                    );
+                    // Tex coords don't change, but depend on the blcok
+                    const auto uvs = get_texture_coords_for_block(block);
+                    texture_coordinates.insert(texture_coordinates.end(), uvs.begin(), uvs.end());
 
                     // For indices, offset past existing geometry
                     for (const auto index : face_indices)
@@ -95,13 +101,14 @@ void Chunk::generate_mesh()
                     ++faces;
                 };
 
-                if (blocks[x][y][z] == Block::Air) continue;
-                if (!is_solid_block(x, y + 1, z)) add_face(0);
-                if (!is_solid_block(x, y - 1, z)) add_face(1);
-                if (!is_solid_block(x - 1, y, z)) add_face(2);
-                if (!is_solid_block(x + 1, y, z)) add_face(3);
-                if (!is_solid_block(x, y, z - 1)) add_face(4);
-                if (!is_solid_block(x, y, z + 1)) add_face(5);
+                auto block = blocks[x][y][z];
+                if (block == Block::Air) continue;
+                if (!is_solid_block(x, y + 1, z)) add_face(0, block);
+                if (!is_solid_block(x, y - 1, z)) add_face(1, block);
+                if (!is_solid_block(x - 1, y, z)) add_face(2, block);
+                if (!is_solid_block(x + 1, y, z)) add_face(3, block);
+                if (!is_solid_block(x, y, z - 1)) add_face(4, block);
+                if (!is_solid_block(x, y, z + 1)) add_face(5, block);
             }
         }
     }
@@ -110,6 +117,32 @@ void Chunk::generate_mesh()
     mesh = std::make_shared<Mesh>(vertices, indices, texture_coordinates, normals);
 }
 
-Chunk::~Chunk()
+std::array<float, 8> Chunk::get_texture_coords_for_block(const Block block) const
 {
+    const auto get_nth_item_in_atlas = [](const Block block)
+    {
+        switch (block)
+        {
+            case Block::Grass: return 0;
+            case Block::Dirt:  return 2;
+            case Block::Stone: return 3;
+            case Block::Sand:  return 7;
+            default:
+                throw std::runtime_error("block with unknown texture atlas position");
+        }
+    };
+
+    // Find block
+    const glm::vec2 block_offset = subtexture_size / texture_size;
+    const glm::vec2 offset_bottom = block_offset * glm::vec2{ get_nth_item_in_atlas(block), 0.0f };
+    const glm::vec2 offset_top = offset_bottom + block_offset;
+
+    return {
+        offset_top.x,    offset_top.y,
+        offset_top.x,    offset_bottom.y,
+        offset_bottom.x, offset_bottom.y,
+        offset_bottom.x, offset_top.y
+    };
 }
+
+Chunk::~Chunk() {}

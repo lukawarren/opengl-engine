@@ -159,8 +159,11 @@ void Renderer::diffuse_pass(
 
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
     scene.sun.shadow_buffer->depth_map->bind(2);
+
     entities();
-    chunks();
+
+    if (scene.chunks.size() > 0)
+        chunks();
 }
 
 void Renderer::water_pass(const Scene& scene)
@@ -272,7 +275,7 @@ void Renderer::shadow_pass(const Scene& scene)
 
     // Render chunks - back to normal culling!
     glCullFace(GL_BACK);
-    Chunk::texture->bind();
+    if (scene.chunks.size() > 0) Chunk::texture->bind();
     for (const auto& chunk : scene.chunks)
     {
         shadow_shader.set_uniform("mvp", view_projection * chunk.transform.matrix());

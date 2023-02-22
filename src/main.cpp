@@ -93,12 +93,11 @@ Scene chunk_scene()
     scene.sun.colour *= 0.8f;
 
     auto& monkey = scene.entities[0];
-    monkey.transform.position = { 5, 5, 5 };
+    monkey.transform.position = { 15, 15, 15 };
 
-    //for (int x = 0; x < 16; ++x)
-    //for (int z = 0; z < 16; ++z)
-    //scene.chunks.emplace_back(x, 0, z);
-    scene.chunks.emplace_back(glm::ivec3 {0,0,0});
+    for (int x = -8; x < 8; ++x)
+        for (int z = -8; z < 8; ++z)
+            scene.chunks.emplace_back(glm::ivec3 {x, 0, z});
 
     return scene;
 }

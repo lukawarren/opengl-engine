@@ -20,6 +20,8 @@ public:
     ~Texture();
 
     void clamp(const glm::vec4& colour) const;
+    void set_as_texture_atlas(const int max_mipmap_level) const;
+
     void bind(const unsigned int unit = 0) const;
     void unbind() const;
 
