@@ -34,9 +34,8 @@ void Chunk::generate_blocks(const glm::ivec3 position)
     const auto get_height = [&](const int x, const int z)
     {
         const glm::vec2 pos = { position.x * size + x, position.z * size + z };
-        return sample_noise(pos, 0.01f) * 10.0f +
-                sample_noise(pos, 0.1f) * 3.0f +
-                sample_noise(pos, 10.0f) * 1.1f;
+        return sample_noise(pos, 0.01f) * 5.0f +
+            sample_noise(pos, 0.005f) * 20.0f;
     };
 
     for (int x = 0; x < size; ++x)

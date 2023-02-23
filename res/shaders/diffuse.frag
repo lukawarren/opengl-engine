@@ -41,7 +41,7 @@ float get_shadow(vec4 lightspace_position)
             float pcf_depth = texture(shadow_map, proj_coords.xy + vec2(x, y) * texel_size).r;
 
             // Finally sample depth (i.e. the important bit)
-            // NOTE: 0.3 is used instead of 0.0 to provide ambient lighting
+            // NOTE: 0.1 is used instead of 0.0 to provide ambient lighting
             shadow += current_depth - bias > pcf_depth ? 0.1 : 1.0;
         }
     }
@@ -62,8 +62,9 @@ void main()
     else
         normal = normalize(out_normal);
 
-    // Diffuse lighting
-    vec3 light_direction = normalize(light_position - out_position);
+
+    // Diffuse lighting - assume light to be a direction (e.g. the sun and i.e. not a point light)
+    vec3 light_direction = normalize(light_position);
     vec3 diffuse = max(dot(normal, light_direction), 0.0) * light_colour;
     diffuse += ambient_light;
 

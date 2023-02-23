@@ -77,7 +77,7 @@ void Texture::set_as_texture_atlas(const int max_mipmap_level) const
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     // Limit mip-mapping so sub-textures don't go smaller than 1x1
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 4);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, max_mipmap_level);
 
     // Disable anisotropy
     if (GLAD_GL_EXT_texture_filter_anisotropic)

@@ -49,7 +49,7 @@ int main()
         if (!captured) continue;
 
         // WASD
-        const float speed = 4.0f * delta;
+        const float speed = 10.0f * delta;
         glm::vec3 movement = {};
         if (window.get_key(GLFW_KEY_W)) movement.z += 1.0f;
         if (window.get_key(GLFW_KEY_S)) movement.z -= 1.0f;
@@ -83,20 +83,20 @@ Scene chunk_scene()
     Scene scene =
     {
         .chunks = {},
-        .entities = { Entity("monkey.obj") },
+        .entities = { Entity("cube.obj") },
         .waters = {},
         .sun = { { 0.18f, 1.0f, 0.3f }, { 255.0 / 255.0, 255.0 / 255.0, 200.0 / 255.0 } },
         .camera = Camera({ 0.0f, 0.0f, 5.0f }, 30.0f, 0.0f, 0.0f)
     };
 
-    scene.sun.position *= 20.0f;
+    scene.sun.position *= 50.0f;
     scene.sun.colour *= 0.8f;
 
     auto& monkey = scene.entities[0];
     monkey.transform.position = { 15, 15, 15 };
 
-    for (int x = -8; x < 8; ++x)
-        for (int z = -8; z < 8; ++z)
+    for (int x = -2; x < 2; ++x)
+        for (int z = -2; z < 2; ++z)
             scene.chunks.emplace_back(glm::ivec3 {x, 0, z});
 
     return scene;

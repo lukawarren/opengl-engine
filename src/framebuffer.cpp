@@ -41,7 +41,7 @@ Framebuffer::Framebuffer(const unsigned int width, const unsigned int height, co
             GL_DEPTH_STENCIL,
             GL_UNSIGNED_INT_24_8
         );
-        this->depth_map->clamp(glm::vec4(0.0f));
+        this->depth_map->clamp(glm::vec4(1.0f));
         glFramebufferTexture2D(
             GL_FRAMEBUFFER,
             GL_DEPTH_ATTACHMENT,

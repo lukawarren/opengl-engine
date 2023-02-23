@@ -2,3 +2,4 @@
 * delta tiime in water.h and FPS movement
 * guassian blur on water refraction
 * fix quad UVs
+* add jitter to PCF

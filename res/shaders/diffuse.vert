@@ -13,7 +13,6 @@ uniform mat4 lightspace_matrix;
 
 out vec2 out_texture_coord;
 out vec3 out_normal;
-out vec3 out_position;
 out mat3 out_tbn;
 out vec4 out_lightspace_position;
 
@@ -36,5 +35,4 @@ void main()
     out_tbn = mat3(T, B, N);
     out_texture_coord = texture_coord;
     out_normal = transpose(inverse(mat3(model))) * normal; // Apply model matrix to normal!
-    out_position = world_space.xyz;
 }
