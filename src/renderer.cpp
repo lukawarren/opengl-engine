@@ -91,7 +91,12 @@ bool Renderer::update(const Scene& scene)
     // Calculate FPS
     double end = glfwGetTime();
     int fps = int(1.0 / (end - start));
-    window.set_title(std::to_string(fps) + " FPS");
+
+    if (glfwGetTime() - last_fps_report_time >= 1.0)
+    {
+        std::cout << fps << " fps - " << (end-start) * 1000 << " ms" << std::endl;
+        last_fps_report_time = glfwGetTime();
+    }
 
     return true;
 }

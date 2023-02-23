@@ -48,4 +48,7 @@ private:
     BloomShader bloom_shader;
 
     bool did_bake_shadows = false;
+
+    // FPS counting
+    double last_fps_report_time = 0.0f;
 };
