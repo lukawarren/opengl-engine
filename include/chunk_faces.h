@@ -22,10 +22,10 @@ const std::array<std::vector<float>, 6> face_vertices =
 
     // Left
     {
-        -0.5f,  0.5f,  0.5f,
         -0.5f,  0.5f, -0.5f,
         -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f,  0.5f
+        -0.5f, -0.5f,  0.5f,
+        -0.5f,  0.5f,  0.5f,
     },
 
     // Right
@@ -46,10 +46,10 @@ const std::array<std::vector<float>, 6> face_vertices =
 
     // Back
     {
-         0.5f,  0.5f, 0.5f,
         -0.5f,  0.5f, 0.5f,
         -0.5f, -0.5f, 0.5f,
          0.5f, -0.5f, 0.5f,
+         0.5f,  0.5f, 0.5f,
     }
 }};
 

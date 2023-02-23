@@ -83,7 +83,7 @@ Scene chunk_scene()
     Scene scene =
     {
         .chunks = {},
-        .entities = { Entity("cube.obj") },
+        .entities = { Entity("monkey.obj") },
         .waters = {},
         .sun = { { 0.18f, 1.0f, 0.3f }, { 255.0 / 255.0, 255.0 / 255.0, 200.0 / 255.0 } },
         .camera = Camera({ 0.0f, 0.0f, 5.0f }, 30.0f, 0.0f, 0.0f)

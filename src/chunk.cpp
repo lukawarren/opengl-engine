@@ -34,8 +34,7 @@ void Chunk::generate_blocks(const glm::ivec3 position)
     const auto get_height = [&](const int x, const int z)
     {
         const glm::vec2 pos = { position.x * size + x, position.z * size + z };
-        return sample_noise(pos, 0.01f) * 5.0f +
-            sample_noise(pos, 0.005f) * 20.0f;
+        return sample_noise(pos, 1 / 64.0f) * 20.0f;
     };
 
     for (int x = 0; x < size; ++x)
@@ -44,10 +43,14 @@ void Chunk::generate_blocks(const glm::ivec3 position)
         {
             int height = (int)get_height(x, z);
             if (height <= 0) height = 1;
-            if (height >= size) height = size - 1;
+            if (height >= max_height) height = max_height - 1;
 
             for (int y = 0; y < height; ++y)
-                blocks[x][y][z] = (y == height-1) ? Block::Grass : Block::Dirt;
+            {
+                if (y < 5) blocks[x][y][z] = Block::Sand;
+                else if (y == height-1) blocks[x][y][z] = Block::Grass;
+                else blocks[x][y][z] = Block::Dirt;
+            }
         }
     }
 }
@@ -58,7 +61,7 @@ void Chunk::generate_mesh()
     {
         // TODO: check against adjacent chunks
         if (x < 0 || y < 0 || z < 0) return false;
-        if (x >= size || y >= size || z >= size) return false;
+        if (x >= size || y >= max_height || z >= size) return false;
         return blocks[x][y][z] != Block::Air;
     };
 
@@ -70,7 +73,7 @@ void Chunk::generate_mesh()
 
     for (int x = 0; x < size; ++x)
     {
-        for (int y = 0; y < size; ++y)
+        for (int y = 0; y < max_height; ++y)
         {
             for (int z = 0; z < size; ++z)
             {
@@ -91,7 +94,7 @@ void Chunk::generate_mesh()
                     }
 
                     // Tex coords don't change, but depend on the blcok
-                    const auto uvs = get_texture_coords_for_block(block);
+                    const auto uvs = get_texture_coords_for_block(block, n == 0);
                     texture_coordinates.insert(texture_coordinates.end(), uvs.begin(), uvs.end());
 
                     // For indices, offset past existing geometry
@@ -116,13 +119,13 @@ void Chunk::generate_mesh()
     mesh = std::make_shared<Mesh>(vertices, indices, texture_coordinates, normals);
 }
 
-std::array<float, 8> Chunk::get_texture_coords_for_block(const Block block) const
+std::array<float, 8> Chunk::get_texture_coords_for_block(const Block block, const bool is_top_face) const
 {
-    const auto get_nth_item_in_atlas = [](const Block block)
+    const auto get_nth_item_in_atlas = [&](const Block block)
     {
         switch (block)
         {
-            case Block::Grass: return 0;
+            case Block::Grass: return is_top_face ?  0 : 1;
             case Block::Dirt:  return 2;
             case Block::Stone: return 3;
             case Block::Sand:  return 7;
@@ -137,10 +140,10 @@ std::array<float, 8> Chunk::get_texture_coords_for_block(const Block block) cons
     const glm::vec2 offset_top = offset_bottom + block_offset;
 
     return {
-        offset_top.x,    offset_top.y,
-        offset_top.x,    offset_bottom.y,
-        offset_bottom.x, offset_bottom.y,
-        offset_bottom.x, offset_top.y
+        offset_bottom.x,    offset_bottom.y,
+        offset_bottom.x,    offset_top.y,
+        offset_top.x,       offset_top.y,
+        offset_top.x,       offset_bottom.y
     };
 }
 
