@@ -84,7 +84,7 @@ Scene chunk_scene()
     {
         .chunks = {},
         .entities = { Entity("monkey.obj") },
-        .waters = {},
+        .waters = { Water() },
         .sun = { { 0.18f, 1.0f, 0.3f }, { 255.0 / 255.0, 255.0 / 255.0, 200.0 / 255.0 } },
         .camera = Camera({ 0.0f, 0.0f, 5.0f }, 30.0f, 0.0f, 0.0f)
     };
@@ -94,6 +94,10 @@ Scene chunk_scene()
 
     auto& monkey = scene.entities[0];
     monkey.transform.position = { 15, 15, 15 };
+
+    auto& water = scene.waters[0];
+    water.transform.scale *= 100.0f;
+    water.transform.position.y = 5.0f;
 
     for (int x = -2; x < 2; ++x)
         for (int z = -2; z < 2; ++z)

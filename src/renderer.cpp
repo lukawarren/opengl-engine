@@ -313,6 +313,7 @@ void Renderer::bloom_pass()
 void Renderer::blur_pass(const Texture& texture, const Framebuffer& final_framebuffer)
 {
     blur_shader.bind();
+    quad_mesh->bind();
 
     // Cheaper to just disable depth tests instead of clearing every time
     glDisable(GL_DEPTH_TEST);
