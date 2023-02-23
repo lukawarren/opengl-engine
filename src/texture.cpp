@@ -3,7 +3,7 @@
 #include <stb_image.h>
 #include <iostream>
 
-Texture::Texture(const std::string& filename)
+Texture::Texture(const std::string& filename, const bool use_nearest_filtering)
 {
     // Load from disk
     int width, height, channels;
@@ -21,15 +21,15 @@ Texture::Texture(const std::string& filename)
 
     // Mipmaps
     glGenerateMipmap(GL_TEXTURE_2D);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, use_nearest_filtering ? GL_NEAREST_MIPMAP_LINEAR : GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, use_nearest_filtering ? GL_NEAREST : GL_LINEAR);
 
     // Texture wrapping
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     // Do anisotropic filtering (if we can)
-    if (GLAD_GL_EXT_texture_filter_anisotropic)
+    if (!use_nearest_filtering && GLAD_GL_EXT_texture_filter_anisotropic)
     {
         float max_anisotropy;
         glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_anisotropy);
@@ -72,13 +72,14 @@ Texture::Texture(
     const unsigned int height,
     const unsigned int internal_format,
     const unsigned int format,
-    const unsigned int type)
+    const unsigned int type,
+    const bool use_nearest_filtering)
 {
     glGenTextures(1, &texture_id);
     glBindTexture(GL_TEXTURE_2D, texture_id);
     glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, format, type, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, use_nearest_filtering ? GL_NEAREST : GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, use_nearest_filtering ? GL_NEAREST : GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // For water FBOs
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // For water FBOs
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -96,18 +97,9 @@ void Texture::clamp(const glm::vec4& colour) const
 
 void Texture::set_as_texture_atlas(const int max_mipmap_level) const
 {
-    // Prevent "bleed-in" from different textures on the atlas
-    glBindTexture(GL_TEXTURE_2D, texture_id);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
     // Limit mip-mapping so sub-textures don't go smaller than 1x1
+    glBindTexture(GL_TEXTURE_2D, texture_id);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, max_mipmap_level);
-
-    // Disable anisotropy
-    if (GLAD_GL_EXT_texture_filter_anisotropic)
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1.0f);
-
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 

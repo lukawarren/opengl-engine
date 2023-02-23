@@ -12,8 +12,8 @@ Chunk::Chunk(const glm::ivec3 position)
 {
     if (!texture)
     {
-        texture = get_texture("blocks.png");
-        texture->set_as_texture_atlas(4);
+        texture = get_texture("blocks.png", true);
+        texture->set_as_texture_atlas(1);
     }
 
     generate_blocks(position);

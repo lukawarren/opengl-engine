@@ -33,13 +33,14 @@ Framebuffer::Framebuffer(const unsigned int width, const unsigned int height, co
 
     if (depth_settings != DepthSettings::NO_DEPTH)
     {
-        // Create depth buffer
+        // Create depth buffer using *nearest* filtering!
         this->depth_map.emplace(
             width,
             height,
             GL_DEPTH_COMPONENT24,
             GL_DEPTH_STENCIL,
-            GL_UNSIGNED_INT_24_8
+            GL_UNSIGNED_INT_24_8,
+            true
         );
         this->depth_map->clamp(glm::vec4(1.0f));
         glFramebufferTexture2D(

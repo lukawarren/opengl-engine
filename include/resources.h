@@ -21,7 +21,7 @@ void init_resources();
 void free_resources();
 
 std::vector<TexturedMesh> load_assimp_scene(const std::string& filename);
-Texture* get_texture(const std::string& filename);
+Texture* get_texture(const std::string& filename, const bool use_nearest_filtering = false);
 
 extern Mesh* quad_mesh;
 extern Mesh* cube_mesh;

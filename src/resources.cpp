@@ -155,10 +155,10 @@ static Material material_from_assimp(const aiMaterial* material, const std::stri
     };
 }
 
-Texture* get_texture(const std::string& filename)
+Texture* get_texture(const std::string& filename, const bool use_nearest_filtering)
 {
     if (textures.contains(filename)) return textures[filename];
-    auto iterator = textures.emplace(filename, new Texture(filename)).first;
+    auto iterator = textures.emplace(filename, new Texture(filename, use_nearest_filtering)).first;
     return iterator->second;
 }
 

@@ -7,7 +7,7 @@
 class Texture
 {
 public:
-    Texture(const std::string& filename);
+    Texture(const std::string& filename, const bool use_nearest_filtering = false);
 
     // For cubemaps
     Texture(const std::array<std::string, 6> faces);
@@ -18,7 +18,9 @@ public:
         const unsigned int height,
         const unsigned int internal_format = GL_RGB,
         const unsigned int format = GL_RGB,
-        const unsigned int type = GL_UNSIGNED_BYTE);
+        const unsigned int type = GL_UNSIGNED_BYTE,
+        const bool use_nearest_filtering = false
+    );
 
     Texture(const Texture&) = delete;
     ~Texture();
