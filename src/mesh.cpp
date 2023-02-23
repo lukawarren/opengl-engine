@@ -1,28 +1,8 @@
 #include "mesh.h"
+#include "cube.h"
+#include "quad.h"
 #include <glad/glad.h>
 #include <stdexcept>
-
-const std::vector<float> quad_vertices =
-{
-     1.0f,  1.0f, 0.0f,
-     1.0f, -1.0f, 0.0f,
-    -1.0f, -1.0f, 0.0f,
-    -1.0f,  1.0f, 0.0f
-};
-
-const std::vector<unsigned int> quad_indices =
-{
-    0, 1, 3,
-    1, 2, 3
-};
-
-const std::vector<float> quad_texture_coords =
-{
-    1.0f, 1.0f,
-    1.0f, 0.0f,
-    0.0f, 0.0f,
-    0.0f, 1.0f
-};
 
 Mesh::Mesh(
     const std::vector<float>& vertices,
@@ -55,6 +35,11 @@ Mesh::Mesh(
 Mesh* Mesh::quad()
 {
     return new Mesh(quad_vertices, quad_indices, quad_texture_coords);
+}
+
+Mesh* Mesh::cube()
+{
+    return new Mesh(cube_vertices, cube_indices, cube_texture_coords);
 }
 
 void Mesh::make_vao(

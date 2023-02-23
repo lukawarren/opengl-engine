@@ -24,3 +24,4 @@ std::vector<TexturedMesh> load_assimp_scene(const std::string& filename);
 Texture* get_texture(const std::string& filename);
 
 extern Mesh* quad_mesh;
+extern Mesh* cube_mesh;

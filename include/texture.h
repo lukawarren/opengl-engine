@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <array>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
@@ -7,6 +8,9 @@ class Texture
 {
 public:
     Texture(const std::string& filename);
+
+    // For cubemaps
+    Texture(const std::array<std::string, 6> faces);
 
     // For use with FBOs, etc.
     Texture(

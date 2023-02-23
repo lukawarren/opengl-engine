@@ -17,6 +17,7 @@ public:
     ~Mesh();
 
     static Mesh* quad();
+    static Mesh* cube();
 
     void bind() const;
     void unbind() const;

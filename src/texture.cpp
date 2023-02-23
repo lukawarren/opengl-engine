@@ -42,6 +42,31 @@ Texture::Texture(const std::string& filename)
     stbi_image_free(data);
 }
 
+Texture::Texture(const std::array<std::string, 6> faces)
+{
+    glGenTextures(1, &texture_id);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+
+    // Load from disk
+    int width, height, channels;
+    for (unsigned int i = 0; i < faces.size(); ++i)
+    {
+        unsigned char* data = stbi_load(("../res/assets/" + faces[i]).c_str(), &width, &height, &channels, 0);
+        if (!data) throw std::runtime_error("failed to load texture " + faces[i]);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        stbi_image_free(data);
+    }
+
+    // Sampling options - no need for mipmaps as skyboxes, etc. aren't small
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 Texture::Texture(
     const unsigned int width,
     const unsigned int height,

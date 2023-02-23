@@ -16,10 +16,12 @@ static Mesh* mesh_from_assimp(const aiMesh* assimp_mesh, const std::string& id);
 static Material material_from_assimp(const aiMaterial* material, const std::string& path);
 
 Mesh* quad_mesh;
+Mesh* cube_mesh;
 
 void init_resources()
 {
     quad_mesh = Mesh::quad();
+    cube_mesh = Mesh::cube();
 }
 
 std::vector<TexturedMesh> load_assimp_scene(const std::string& filename)
@@ -165,4 +167,5 @@ void free_resources()
     for(auto& mesh : meshes) delete mesh.second;
     for(auto& texture : textures) delete texture.second;
     delete quad_mesh;
+    delete cube_mesh;
 }

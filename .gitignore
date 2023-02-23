@@ -10,5 +10,6 @@ res/assets/terrain/
 res/assets/monkey.obj
 res/assets/grass.png
 res/assets/blocks.png
+res/assets/skybox
 .DS_Store
 */.DS_Store

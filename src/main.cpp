@@ -85,9 +85,21 @@ Scene chunk_scene()
         .chunks = {},
         .entities = { Entity("monkey.obj") },
         .waters = { Water() },
+        .skybox = MAKE_SKYBOX(
+            "skybox/xpos.png",
+            "skybox/xneg.png",
+            "skybox/ypos.png",
+            "skybox/yneg.png",
+            "skybox/zpos.png",
+            "skybox/zneg.png"
+        ),
         .sun = { { 0.18f, 1.0f, 0.3f }, { 255.0 / 255.0, 255.0 / 255.0, 200.0 / 255.0 } },
         .camera = Camera({ 0.0f, 0.0f, 5.0f }, 30.0f, 0.0f, 0.0f)
     };
+
+    // "Sky lighting"
+    scene.skybox_tint = { 0.5f, 0.5f, 1.0f };
+    scene.ambient_light = { 0.05f, 0.05f, 0.1f };
 
     scene.sun.position *= 50.0f;
     scene.sun.colour *= 0.8f;

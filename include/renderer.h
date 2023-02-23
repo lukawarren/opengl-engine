@@ -46,6 +46,7 @@ private:
     CompositeShader composite_shader;
     BlurShader blur_shader;
     BloomShader bloom_shader;
+    SkyboxShader skybox_shader;
 
     bool did_bake_shadows = false;
 

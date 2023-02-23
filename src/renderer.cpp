@@ -108,12 +108,15 @@ void Renderer::diffuse_pass(
     const unsigned int height,
     const std::optional<glm::vec4> clip_plane)
 {
+    const auto view_matrix = camera.view_matrix();
+    const auto projection_matrix = camera.projection_matrix(width, height);
+
     const auto set_common_uniforms = [&](Shader& shader)
     {
         // Update uniforms...
         shader.bind();
-        shader.set_uniform("view", camera.view_matrix());
-        shader.set_uniform("projection", camera.projection_matrix(width, height));
+        shader.set_uniform("view", view_matrix);
+        shader.set_uniform("projection", projection_matrix);
         shader.set_uniform("ambient_light", scene.ambient_light);
         shader.set_uniform("light_position", scene.sun.position);
         shader.set_uniform("light_colour", scene.sun.colour);
@@ -163,12 +166,31 @@ void Renderer::diffuse_pass(
     };
 
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+    // Render skybox - disable culling because cube mesh has incorrect winding (TODO: fix)
+    if (scene.skybox.has_value())
+    {
+        glDepthMask(GL_FALSE);
+        glDisable(GL_CULL_FACE);
+
+        // Remove translation element from view matrix
+        const auto view = glm::mat4(glm::mat3(view_matrix));
+
+        skybox_shader.bind();
+        skybox_shader.set_uniform("matrix", projection_matrix * view);
+        skybox_shader.set_uniform("tint", scene.skybox_tint);
+        (*scene.skybox)->bind();
+        cube_mesh->bind();
+        cube_mesh->draw();
+
+        glEnable(GL_CULL_FACE);
+        glDepthMask(GL_TRUE);
+    }
+
+    // Render objects
     scene.sun.shadow_buffer->depth_map->bind(2);
-
     entities();
-
-    if (scene.chunks.size() > 0)
-        chunks();
+    if (scene.chunks.size() > 0) chunks();
 }
 
 void Renderer::water_pass(const Scene& scene)
