@@ -29,13 +29,16 @@ Texture::Texture(const std::string& filename, const bool use_nearest_filtering)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     // Do anisotropic filtering (if we can)
-    if (!use_nearest_filtering && GLAD_GL_EXT_texture_filter_anisotropic)
+    if (!use_nearest_filtering)
     {
-        float max_anisotropy;
-        glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_anisotropy);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, std::min(max_anisotropy, 16.0f));
+        if (GLAD_GL_EXT_texture_filter_anisotropic)
+        {
+            float max_anisotropy;
+            glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_anisotropy);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, std::min(max_anisotropy, 16.0f));
+        }
+        else std::cerr << "anisotropic filtering not supported" << std::endl;
     }
-    else std::cerr << "anisotropic filtering not supported" << std::endl;
 
     // Unbind and free image from normal memory
     glBindTexture(GL_TEXTURE_2D, 0);

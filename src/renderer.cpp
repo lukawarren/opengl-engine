@@ -85,6 +85,9 @@ bool Renderer::update(const Scene& scene)
     bloom_framebuffer.colour_texture->bind(1); // bloom
     quad_mesh->draw();
 
+    // Sprites
+    sprite_pass(scene);
+
     glViewport(0, 0, render_width(), render_height());
     glEnable(GL_CULL_FACE);
 
@@ -365,6 +368,30 @@ void Renderer::blur_pass(const Texture& texture, const Framebuffer& final_frameb
     quad_mesh->draw();
     final_framebuffer.unbind();
 
+    glEnable(GL_DEPTH_TEST);
+}
+
+void Renderer::sprite_pass(const Scene& scene)
+{
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    quad_shader.bind();
+
+    // Disregard camera translation
+    const glm::mat4 projection = glm::mat4(glm::mat3(scene.camera.projection_matrix(
+        render_width(),
+        render_height()
+    )));
+
+    for (const auto& sprite : scene.sprites)
+    {
+        // Quad mesh already bound
+        sprite.texture->bind();
+        quad_shader.set_uniform("matrix", projection * sprite.transform.matrix());
+        quad_mesh->draw();
+    }
+
+    glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
 }
 

@@ -88,6 +88,7 @@ Scene chunk_scene()
         .chunks = {},
         .entities = { Entity("monkey.obj") },
         .waters = { Water() },
+        .sprites = { Sprite("crosshair.png") },
         .skybox = MAKE_SKYBOX(
             "skybox/xpos.png",
             "skybox/xneg.png",
@@ -100,27 +101,30 @@ Scene chunk_scene()
         .camera = Camera({ 0.0f, 0.0f, 5.0f }, 30.0f, 0.0f, 0.0f)
     };
 
-    // "Sky lighting"
+    // Lighting
     scene.skybox_tint = { 0.5f, 0.5f, 1.0f };
     scene.ambient_light = { 0.05f, 0.05f, 0.1f };
-
     scene.sun.position *= 50.0f;
     scene.sun.colour *= 0.8f;
 
     auto& monkey = scene.entities[0];
     monkey.transform.position = { 15, 15, 15 };
 
+    auto& crosshair = scene.sprites[0];
+    crosshair.transform.scale = glm::vec3(0.02f);
+
+    // Water and positioning
     auto& water = scene.waters[0];
     water.transform.scale *= 100.0f;
     water.transform.position.y = 5.0f;
-
     water.transform.position.x = Chunk::size * 2;
     water.transform.position.z = Chunk::size * 2;
     scene.camera.position.x = Chunk::size * 2;
     scene.camera.position.z = Chunk::size * 2;
     scene.camera.position.y = 20;
 
-    for (int x = 0; x < 4; ++x)
+    // Chunks
+    for (int x = 0  ; x < 4; ++x)
         for (int z = 0; z < 4; ++z)
             scene.chunks.emplace_back(glm::ivec3 {x, 0, z});
 

@@ -29,6 +29,7 @@ private:
     void shadow_pass(const Scene& scene);
     void bloom_pass();
     void blur_pass(const Texture& texture, const Framebuffer& final_framebuffer);
+    void sprite_pass(const Scene& scene);
 
     // Output
     float render_scale;
