@@ -6,6 +6,7 @@ constexpr int height = 900;
 
 Scene chunk_scene();
 Scene sponza_scene();
+void chunk_loop(Scene& scene);
 
 int main()
 {
@@ -73,6 +74,8 @@ int main()
 
         // Confine rotation
         camera->pitch = std::max(std::min(camera->pitch, 90.0f), -90.0f);
+
+        chunk_loop(scene);
     }
 
     return 0;
@@ -111,8 +114,14 @@ Scene chunk_scene()
     water.transform.scale *= 100.0f;
     water.transform.position.y = 5.0f;
 
-    for (int x = -2; x < 2; ++x)
-        for (int z = -2; z < 2; ++z)
+    water.transform.position.x = Chunk::size * 2;
+    water.transform.position.z = Chunk::size * 2;
+    scene.camera.position.x = Chunk::size * 2;
+    scene.camera.position.z = Chunk::size * 2;
+    scene.camera.position.y = 20;
+
+    for (int x = 0; x < 4; ++x)
+        for (int z = 0; z < 4; ++z)
             scene.chunks.emplace_back(glm::ivec3 {x, 0, z});
 
     return scene;
@@ -141,4 +150,34 @@ Scene sponza_scene()
     cube->transform.position.y = 5;
 
     return scene;
+}
+
+void chunk_loop(Scene& scene)
+{
+    const glm::vec3 direction = scene.camera.direction_vector();
+    const glm::vec3 origin = scene.camera.position;
+    const int max_distance = 100;
+
+    for (int d = 0; d < max_distance; ++d)
+    {
+        // March along
+        glm::vec3 ray_pos = origin + direction * (float)d;
+
+        // Locate chunk
+        int chunk_x = int(ray_pos.x / (float)Chunk::size);
+        int chunk_z = int(ray_pos.z / (float)Chunk::size);
+        if (chunk_x >= 4 || chunk_z >= 4) break;
+        auto& chunk = scene.chunks[chunk_x * 4 + chunk_z];
+
+        // Find block
+        int block_x = (int)(ray_pos.x + 0.5f) % Chunk::size;
+        int block_y = (int)(ray_pos.y + 0.5f) % Chunk::max_height;
+        int block_z = (int)(ray_pos.z + 0.5f) % Chunk::size;
+
+        auto& block = chunk.blocks[block_x][block_y][block_z];
+        if (block == Block::Air) continue;
+        block= Block::Wood;
+        chunk.rebuild_mesh();
+        break;
+    }
 }

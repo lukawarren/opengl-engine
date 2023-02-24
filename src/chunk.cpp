@@ -23,6 +23,11 @@ Chunk::Chunk(const glm::ivec3 position)
     transform.position = position * glm::ivec3 { size, size, size };
 }
 
+void Chunk::rebuild_mesh()
+{
+    generate_mesh();
+}
+
 void Chunk::generate_blocks(const glm::ivec3 position)
 {
     const auto sample_noise = [](glm::vec2 pos, float scale)

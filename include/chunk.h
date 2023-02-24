@@ -31,6 +31,8 @@ public:
     std::shared_ptr<Mesh> mesh;
     Block blocks[size][max_height][size] = {};
 
+    void rebuild_mesh();
+
 private:
     void generate_blocks(const glm::ivec3 position);
     void generate_mesh();

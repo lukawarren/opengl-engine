@@ -33,6 +33,17 @@ public:
         return glm::perspective(fov, width / height, z_near, z_far);
     }
 
+    glm::vec3 direction_vector() const
+    {
+        // Eye coordinates at centre of screen
+        glm::vec4 eye = { 0.0f, 0.0f, -1.0f, 0.0f };
+
+        // World coordinates
+        glm::vec4 world_ray_xyzw = glm::inverse(view_matrix()) * eye;
+        glm::vec3 world_ray_xyz = { world_ray_xyzw.x, world_ray_xyzw.y, world_ray_xyzw.z };
+        return glm::normalize(world_ray_xyz);
+    }
+
     glm::vec3 position = {};
     float pitch = 0.0f;
     float yaw = 0.0f;
