@@ -37,6 +37,9 @@ void Chunk::generate_blocks(const glm::ivec3 position)
         return sample_noise(pos, 1 / 64.0f) * 20.0f;
     };
 
+    // Base terrain layer
+    std::vector<int> highest_points;
+    highest_points.reserve(size*size);
     for (int x = 0; x < size; ++x)
     {
         for (int z = 0; z < size; ++z)
@@ -45,11 +48,48 @@ void Chunk::generate_blocks(const glm::ivec3 position)
             if (height <= 0) height = 1;
             if (height >= max_height) height = max_height - 1;
 
+            highest_points.emplace_back(height);
+
             for (int y = 0; y < height; ++y)
             {
                 if (y < 5) blocks[x][y][z] = Block::Sand;
                 else if (y == height-1) blocks[x][y][z] = Block::Grass;
                 else blocks[x][y][z] = Block::Dirt;
+            }
+        }
+    }
+
+    // Trees
+    for (int i = 0; i < 5; ++i)
+    {
+        size_t index = rand() % highest_points.size();
+        int height = highest_points[index];
+        int x = index / size;
+        int z = index % size;
+
+        for (int y = 0; y < 6; ++y)
+        {
+            blocks[x][height + y][z] = Block::Wood;
+
+            const auto place = [&](int x, int y, int z, Block b)
+            {
+                if (x >= 0 && y >= 0 && x < size && y < size)
+                    blocks[x][y][z] = b;
+            };
+
+            if (y >= 4)
+            {
+                place(x - 1, y + height, z - 1, Block::Leaves);
+                place(x + 0, y + height, z - 1, Block::Leaves);
+                place(x + 1, y + height, z - 1, Block::Leaves);
+
+                place(x - 1, y + height, z + 0, Block::Leaves);
+                place(x + 0, y + height, z + 0, Block::Leaves);
+                place(x + 1, y + height, z + 0, Block::Leaves);
+
+                place(x - 1, y + height, z + 1, Block::Leaves);
+                place(x + 0, y + height, z + 1, Block::Leaves);
+                place(x + 1, y + height, z + 1, Block::Leaves);
             }
         }
     }
@@ -125,10 +165,12 @@ std::array<float, 8> Chunk::get_texture_coords_for_block(const Block block, cons
     {
         switch (block)
         {
-            case Block::Grass: return is_top_face ?  0 : 1;
-            case Block::Dirt:  return 2;
-            case Block::Stone: return 3;
-            case Block::Sand:  return 7;
+            case Block::Grass:  return is_top_face ?  0 : 1;
+            case Block::Dirt:   return 2;
+            case Block::Stone:  return 3;
+            case Block::Sand:   return 7;
+            case Block::Wood:   return is_top_face ? 5 : 4;
+            case Block::Leaves: return 6;
             default:
                 throw std::runtime_error("block with unknown texture atlas position");
         }

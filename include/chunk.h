@@ -10,7 +10,9 @@ enum class Block
     Grass,
     Dirt,
     Stone,
-    Sand
+    Sand,
+    Wood,
+    Leaves
 };
 
 class Chunk
