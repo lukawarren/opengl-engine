@@ -28,7 +28,7 @@ float get_shadow(vec4 lightspace_position)
 
     // If outside of shadow map, ditch
     if(proj_coords.z > 1.0)
-        return 0;
+        return 1;
 
     // PCF
     float bias = 0.001;
@@ -48,22 +48,6 @@ float get_shadow(vec4 lightspace_position)
     }
 
     return shadow / 9.0;
-}
-
-float get_shadow_2(vec4 lightspace_position)
-{
-    // perform perspective divide
-    vec3 projCoords = lightspace_position.xyz / lightspace_position.w;
-    // transform to [0,1] range
-    projCoords = projCoords * 0.5 + 0.5;
-    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
-    float closestDepth = texture(shadow_map, projCoords.xy).r;
-    // get depth of current fragment from light's perspective
-    float currentDepth = projCoords.z;
-    // check whether current frag pos is in shadow
-    float shadow = currentDepth - 0.005 > closestDepth  ? 1.0 : 0.1;
-
-    return shadow;
 }
 
 void main()

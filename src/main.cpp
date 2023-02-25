@@ -50,7 +50,7 @@ int main()
         if (!captured) continue;
 
         // WASD
-        const float speed = 10.0f * delta;
+        const float speed = 30.0f * delta;
         glm::vec3 movement = {};
         if (window.get_key(GLFW_KEY_W)) movement.z += 1.0f;
         if (window.get_key(GLFW_KEY_S)) movement.z -= 1.0f;
@@ -178,9 +178,16 @@ void chunk_loop(Scene& scene)
         int block_y = (int)(ray_pos.y + 0.5f) % Chunk::max_height;
         int block_z = (int)(ray_pos.z + 0.5f) % Chunk::size;
 
+        if (block_x >= Chunk::size || block_y >= Chunk::max_height || block_z >= Chunk::size
+            || block_x < 0 || block_y < 0 || block_z < 0)
+            continue;
+
         auto& block = chunk.blocks[block_x][block_y][block_z];
+
         if (block == Block::Air) continue;
-        block= Block::Wood;
+
+        // Block found; do as we please
+        block = Block::Wood;
         chunk.rebuild_mesh();
         break;
     }

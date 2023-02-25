@@ -123,7 +123,11 @@ void Renderer::diffuse_pass(
         shader.set_uniform("ambient_light", scene.ambient_light);
         shader.set_uniform("light_position", scene.sun.position);
         shader.set_uniform("light_colour", scene.sun.colour);
-        shader.set_uniform("lightspace_matrix", scene.sun.get_light_projection_matrix());
+        shader.set_uniform("lightspace_matrix", scene.sun.get_light_projection_matrix(
+            scene.camera,
+            render_width(),
+            render_height()
+        ));
 
         // ...including clip planes (for planar reflections)
         if (clip_plane.has_value())
@@ -289,7 +293,11 @@ void Renderer::shadow_pass(const Scene& scene)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     shadow_shader.bind();
 
-    const glm::mat4 view_projection = scene.sun.get_light_projection_matrix();
+    const glm::mat4 view_projection = scene.sun.get_light_projection_matrix(
+        scene.camera,
+        render_width(),
+        render_height()
+    );
 
     // Render entities
     for (const auto& entity : scene.entities)
@@ -305,12 +313,15 @@ void Renderer::shadow_pass(const Scene& scene)
 
     // Render chunks - back to normal culling!
     glCullFace(GL_BACK);
-    if (scene.chunks.size() > 0) Chunk::texture->bind();
-    for (const auto& chunk : scene.chunks)
+    if (scene.chunks.size() > 0)
     {
-        shadow_shader.set_uniform("mvp", view_projection * chunk.transform.matrix());
-        chunk.mesh->bind();
-        chunk.mesh->draw();
+        Chunk::texture->bind();
+        for (const auto& chunk : scene.chunks)
+        {
+            shadow_shader.set_uniform("mvp", view_projection * chunk.transform.matrix());
+            chunk.mesh->bind();
+            chunk.mesh->draw();
+        }
     }
 
     // Restore
