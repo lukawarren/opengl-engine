@@ -170,7 +170,7 @@ void chunk_loop(Scene& scene)
         // Locate chunk
         int chunk_x = int(ray_pos.x / (float)Chunk::size);
         int chunk_z = int(ray_pos.z / (float)Chunk::size);
-        if (chunk_x >= 4 || chunk_z >= 4) break;
+        if (chunk_x >= 4 || chunk_z >= 4 || chunk_x < 0 || chunk_z < 0) break;
         auto& chunk = scene.chunks[chunk_x * 4 + chunk_z];
 
         // Find block
