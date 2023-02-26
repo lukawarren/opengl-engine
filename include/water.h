@@ -24,6 +24,9 @@ public:
             Framebuffer::DepthSettings::ENABLE_DEPTH
         );
 
+        reflection_buffer->colour_texture->clamp({}, false);
+        refraction_buffer->colour_texture->clamp({}, false);
+
         distortion_map = get_texture("water/dudv.png");
         normal_map = get_texture("water/normal_map.png");
     }

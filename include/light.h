@@ -36,7 +36,7 @@ struct DirectionalLight
             width,
             height,
             0.001f,
-            60.0f
+            100.0f
         );
 
         // Find center of (shadowed) frustum

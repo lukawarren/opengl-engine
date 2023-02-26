@@ -38,8 +38,9 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     // More texture units
     diffuse_shader.bind();
     diffuse_shader.set_uniform("diffuse_map", 0);
-    diffuse_shader.set_uniform("normal_map", 1);
-    diffuse_shader.set_uniform("shadow_map", 2);
+    diffuse_shader.set_uniform("normal_map",  1);
+    diffuse_shader.set_uniform("shadow_map",  2);
+    diffuse_shader.set_uniform("noise_map",   3);
     composite_shader.bind();
     composite_shader.set_uniform("image_one", 0);
     composite_shader.set_uniform("image_two", 1);
@@ -194,8 +195,10 @@ void Renderer::diffuse_pass(
         glDepthMask(GL_TRUE);
     }
 
-    // Render objects
+    // Common textures
     scene.sun.shadow_buffer->depth_map->bind(2);
+
+    // Render objects
     entities();
     if (scene.chunks.size() > 0) chunks();
 }

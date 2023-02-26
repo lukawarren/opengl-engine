@@ -19,13 +19,14 @@ public:
         const unsigned int internal_format = GL_RGB,
         const unsigned int format = GL_RGB,
         const unsigned int type = GL_UNSIGNED_BYTE,
-        const bool use_nearest_filtering = false
+        const bool use_nearest_filtering = false,
+        const char* data = NULL
     );
 
     Texture(const Texture&) = delete;
     ~Texture();
 
-    void clamp(const glm::vec4& colour) const;
+    void clamp(const glm::vec4& colour, const bool to_border = true) const;
     void set_as_texture_atlas(const int max_mipmap_level) const;
 
     void bind(const unsigned int unit = 0) const;
