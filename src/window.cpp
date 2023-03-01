@@ -26,8 +26,14 @@ bool Window::update()
     glFinish();
 #endif
 
+    // Mouse state
+    cached_mouse_buttons[0] = get_mouse_button(GLFW_MOUSE_BUTTON_LEFT);
+    cached_mouse_buttons[1] = get_mouse_button(GLFW_MOUSE_BUTTON_RIGHT);
+    cached_mouse_buttons[2] = get_mouse_button(GLFW_MOUSE_BUTTON_MIDDLE);
+
     glfwSwapBuffers(window);
     glfwPollEvents();
+
     return !glfwWindowShouldClose(window);
 }
 
@@ -36,13 +42,16 @@ void Window::set_title(const std::string& title) const
     glfwSetWindowTitle(window, title.c_str());
 }
 
-bool Window::get_key(int key) const
+bool Window::get_key(const int key) const
 {
     return glfwGetKey(window, key) == GLFW_PRESS;
 }
 
-bool Window::get_mouse_button(int button) const
+bool Window::get_mouse_button(const int button, const bool repeat) const
 {
+    if (repeat == false && button >= 0 && button <= 2)
+        return glfwGetMouseButton(window, button) == GLFW_PRESS && !cached_mouse_buttons[button];
+
     return glfwGetMouseButton(window, button) == GLFW_PRESS;
 }
 

@@ -6,7 +6,7 @@ constexpr int height = 900;
 
 Scene chunk_scene();
 Scene sponza_scene();
-void chunk_loop(Scene& scene);
+void chunk_loop(Scene& scene, const Window& window);
 
 int main()
 {
@@ -40,7 +40,7 @@ int main()
             captured = false;
         }
 
-        if (window.get_mouse_button(GLFW_MOUSE_BUTTON_LEFT))
+        if (!captured && window.get_mouse_button(GLFW_MOUSE_BUTTON_LEFT))
         {
             window.capture_mouse();
             mouse_position = window.mouse_position();
@@ -75,7 +75,7 @@ int main()
         // Confine rotation
         camera->pitch = std::max(std::min(camera->pitch, 90.0f), -90.0f);
 
-        chunk_loop(scene);
+        chunk_loop(scene, window);
     }
 
     return 0;
@@ -156,39 +156,80 @@ Scene sponza_scene()
     return scene;
 }
 
-void chunk_loop(Scene& scene)
+void chunk_loop(Scene& scene, const Window& window)
 {
     const glm::vec3 direction = scene.camera.direction_vector();
     const glm::vec3 origin = scene.camera.position;
-    const int max_distance = 100;
+    const int max_distance = 7;
 
-    for (int d = 0; d < max_distance; ++d)
+    const auto get_block_pos = [&](const glm::vec3 ray_pos)
     {
-        // March along
-        glm::vec3 ray_pos = origin + direction * (float)d;
-
         // Locate chunk
         int chunk_x = int(ray_pos.x / (float)Chunk::size);
         int chunk_z = int(ray_pos.z / (float)Chunk::size);
-        if (chunk_x >= 4 || chunk_z >= 4 || chunk_x < 0 || chunk_z < 0) break;
-        auto& chunk = scene.chunks[chunk_x * 4 + chunk_z];
+        if (chunk_x >= 4 || chunk_z >= 4 || chunk_x < 0 || chunk_z < 0)
+            return std::optional<BlockPosition> {};
+
+        int chunk_id = chunk_x * 4 + chunk_z;
 
         // Find block
-        int block_x = (int)(ray_pos.x + 0.5f) % Chunk::size;
-        int block_y = (int)(ray_pos.y + 0.5f) % Chunk::max_height;
-        int block_z = (int)(ray_pos.z + 0.5f) % Chunk::size;
+        int block_x = (int)(ray_pos.x) % Chunk::size;
+        int block_y = (int)(ray_pos.y) % Chunk::max_height;
+        int block_z = (int)(ray_pos.z) % Chunk::size;
 
         if (block_x >= Chunk::size || block_y >= Chunk::max_height || block_z >= Chunk::size
             || block_x < 0 || block_y < 0 || block_z < 0)
-            continue;
+            return std::optional<BlockPosition> {};
 
-        auto& block = chunk.blocks[block_x][block_y][block_z];
+        return std::optional<BlockPosition> {{ chunk_id, block_x, block_y, block_z }};
+    };
 
+    for (int d = 1; d < max_distance; ++d)
+    {
+        // March along
+        glm::vec3 ray_pos = origin + direction * (float)d;
+        ray_pos = glm::round(ray_pos);
+
+        // Convert ray to block position within chunk
+        auto block_pos = get_block_pos(ray_pos);
+        if (!block_pos.has_value()) continue;
+
+        // Ignore if block is air
+        auto& chunk = scene.chunks[block_pos->chunk];
+        auto& block = chunk.blocks[block_pos->x][block_pos->y][block_pos->z];
         if (block == Block::Air) continue;
 
-        // Block found; do as we please
-        block = Block::Wood;
-        chunk.rebuild_mesh();
+        // --- Solid block found; do as we please ---
+
+        // Breaking blocks
+        if (window.get_mouse_button(GLFW_MOUSE_BUTTON_LEFT, false))
+        {
+            block = Block::Air;
+            chunk.rebuild_mesh();
+        }
+
+        // Placing blocks
+        if (window.get_mouse_button(GLFW_MOUSE_BUTTON_RIGHT, false))
+        {
+            // Current block is solid, so as long as the previous
+            // one is air, we're fine
+            glm::vec3 previous_ray = origin + direction * (float)(d-1);
+            previous_ray = glm::round(previous_ray);
+
+            auto previous_block_pos = get_block_pos(previous_ray);
+            if (!previous_block_pos.has_value()) break;
+
+            auto& previous_chunk = scene.chunks[previous_block_pos->chunk];
+            auto& previous_block = previous_chunk.blocks[previous_block_pos->x][previous_block_pos->y][previous_block_pos->z];
+
+            if (1==1||previous_block == Block::Air)
+                previous_block = Block::Leaves;
+            else
+            std::cout << "denied\n";
+
+            previous_chunk.rebuild_mesh();
+        }
+
         break;
     }
 }

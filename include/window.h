@@ -14,8 +14,8 @@ public:
     void set_title(const std::string& title) const;
 
     // I/O
-    bool get_key(int key) const;
-    bool get_mouse_button(int button) const;
+    bool get_key(const int key) const;
+    bool get_mouse_button(const int button, const bool repeat = true) const;
     glm::vec2 mouse_position() const;
     void capture_mouse() const;
     void uncapture_mouse() const;
@@ -31,4 +31,5 @@ private:
     void enable_debugging();
 
     GLFWwindow* window;
+    bool cached_mouse_buttons[3] = {};
 };

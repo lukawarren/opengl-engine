@@ -15,6 +15,14 @@ enum class Block
     Leaves
 };
 
+struct BlockPosition
+{
+    int chunk;
+    int x;
+    int y;
+    int z;
+};
+
 class Chunk
 {
 public:
