@@ -30,6 +30,7 @@ private:
     void bloom_pass();
     void blur_pass(const Texture& texture, const Framebuffer& final_framebuffer);
     void sprite_pass(const Scene& scene);
+    void cloud_pass(const Scene& scene);
 
     // Output
     float render_scale;
@@ -48,6 +49,10 @@ private:
     BlurShader blur_shader;
     BloomShader bloom_shader;
     SkyboxShader skybox_shader;
+    CloudShader cloud_shader;
+
+    // Cloud rendering
+    Texture* cloud_noise;
 
     bool did_bake_shadows = false;
 

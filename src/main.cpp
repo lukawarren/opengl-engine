@@ -223,11 +223,7 @@ void chunk_loop(Scene& scene, const Window& window)
             auto& previous_chunk = scene.chunks[previous_block_pos->chunk];
             auto& previous_block = previous_chunk.blocks[previous_block_pos->x][previous_block_pos->y][previous_block_pos->z];
 
-            if (1==1||previous_block == Block::Air)
-                previous_block = Block::Leaves;
-            else
-            std::cout << "denied\n";
-
+            previous_block = Block::Leaves;
             previous_chunk.rebuild_mesh();
         }
 

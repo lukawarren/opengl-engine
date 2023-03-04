@@ -50,6 +50,9 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     bloom_shader.set_uniform("threshold", 1.0f);
 
     init_resources();
+
+    // Clouds
+    cloud_noise = new Texture("vnoise.png");
 }
 
 bool Renderer::update(const Scene& scene)
@@ -69,6 +72,7 @@ bool Renderer::update(const Scene& scene)
     output_framebuffer.bind();
     diffuse_pass(scene, scene.camera, render_width(), render_height());
     water_pass(scene);
+    cloud_pass(scene);
     output_framebuffer.unbind();
 
     // Post processing
@@ -409,6 +413,35 @@ void Renderer::sprite_pass(const Scene& scene)
     glEnable(GL_DEPTH_TEST);
 }
 
+void Renderer::cloud_pass(const Scene& scene)
+{
+    // Matrices
+    Transform t = Transform {};
+    t.position = { 64.0f, 20.0f, 50.0f };
+    t.scale = glm::vec3(10.0f);
+    const glm::mat4 view_projection = scene.camera.projection_matrix(
+        render_width(), render_height()
+    ) * scene.camera.view_matrix();
+
+    cloud_shader.bind();
+
+    // Scene info
+    cloud_shader.set_uniform("mvp", view_projection * t.matrix());
+    cloud_shader.set_uniform("inverse_view_projection", glm::inverse(view_projection));
+    cloud_shader.set_uniform("camera_position", scene.camera.position);
+    cloud_shader.set_uniform("bounds_min", t.position - glm::vec3(5.0f));
+    cloud_shader.set_uniform("bounds_max", t.position + glm::vec3(5.0f));
+
+    // Scattering settings
+    cloud_shader.set_uniform("scale", 0.05f);
+    cloud_shader.set_uniform("density", 0.3f);
+    cloud_shader.set_uniform("threshold", 0.01f);
+
+    cloud_noise->bind();
+    cube_mesh->bind();
+    cube_mesh->draw();
+}
+
 unsigned int Renderer::render_width() const
 {
     return window.framebuffer_width * render_scale;
@@ -421,5 +454,6 @@ unsigned int Renderer::render_height() const
 
 Renderer::~Renderer()
 {
+    delete cloud_noise;
     free_resources();
 }
