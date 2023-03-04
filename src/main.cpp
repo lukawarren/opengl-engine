@@ -161,6 +161,7 @@ void chunk_loop(Scene& scene, const Window& window)
     const glm::vec3 direction = scene.camera.direction_vector();
     const glm::vec3 origin = scene.camera.position;
     const int max_distance = 7;
+    const int substeps = 16;
 
     const auto get_block_pos = [&](const glm::vec3 ray_pos)
     {
@@ -184,10 +185,10 @@ void chunk_loop(Scene& scene, const Window& window)
         return std::optional<BlockPosition> {{ chunk_id, block_x, block_y, block_z }};
     };
 
-    for (int d = 1; d < max_distance; ++d)
+    for (int d = 1; d < max_distance * substeps; ++d)
     {
         // March along
-        glm::vec3 ray_pos = origin + direction * (float)d;
+        glm::vec3 ray_pos = origin + direction * (float)d  / (float)substeps;
         ray_pos = glm::round(ray_pos);
 
         // Convert ray to block position within chunk
@@ -213,7 +214,7 @@ void chunk_loop(Scene& scene, const Window& window)
         {
             // Current block is solid, so as long as the previous
             // one is air, we're fine
-            glm::vec3 previous_ray = origin + direction * (float)(d-1);
+            glm::vec3 previous_ray = origin + direction * (float)(d-1) / (float)substeps;
             previous_ray = glm::round(previous_ray);
 
             auto previous_block_pos = get_block_pos(previous_ray);
