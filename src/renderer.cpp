@@ -1,5 +1,8 @@
 #include "renderer.h"
 #include "resources.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 #include <iostream>
 
 Renderer::Renderer(const std::string& title, const int width, const int height, const float render_scale) :
@@ -23,6 +26,12 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     // For water soft edges
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    // Init ImGui
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(window.window, true);
+    ImGui_ImplOpenGL3_Init("#version 150");
+
     // Connect texture units
     water_shader.bind();
     water_shader.set_uniform("reflection_texture", 0);
@@ -42,15 +51,15 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     // More texture units
     diffuse_shader.bind();
     diffuse_shader.set_uniform("diffuse_map", 0);
-    diffuse_shader.set_uniform("normal_map",  1);
-    diffuse_shader.set_uniform("shadow_map",  2);
+    diffuse_shader.set_uniform("normal_map", 1);
+    diffuse_shader.set_uniform("shadow_map", 2);
     composite_shader.bind();
     composite_shader.set_uniform("image_one", 0);
     composite_shader.set_uniform("image_two", 1);
     cloud_shader.bind();
-    cloud_shader.set_uniform("noise_map",     0);
-    cloud_shader.set_uniform("depth_map",     1);
-    cloud_shader.set_uniform("framebuffer",   2);
+    cloud_shader.set_uniform("noise_map", 0);
+    cloud_shader.set_uniform("depth_map", 1);
+    cloud_shader.set_uniform("framebuffer", 2);
 
     // Post processing settings
     bloom_shader.bind();
@@ -65,6 +74,11 @@ bool Renderer::update(const Scene& scene)
     // Update window; poll events
     double start = glfwGetTime();
     if (!window.update()) return false;
+
+    // ImGui
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
 
     // Shadows
     if (BAKE_SHADOWMAPS == false || !did_bake_shadows)
@@ -101,6 +115,12 @@ bool Renderer::update(const Scene& scene)
 
     // Sprites
     sprite_pass(scene);
+
+    // ImGui
+    ImGui::Begin("Hello world");
+    ImGui::End();
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     glViewport(0, 0, render_width(), render_height());
     glEnable(GL_CULL_FACE);

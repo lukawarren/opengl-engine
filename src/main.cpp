@@ -34,17 +34,19 @@ int main()
         for (auto& water : scene.waters) water.update(delta / 10.0f);
 
         // Deal with mouse grabbing
-        if (window.get_key(GLFW_KEY_ESCAPE))
+        if (window.get_key(GLFW_KEY_ESCAPE, false))
         {
-            window.uncapture_mouse();
-            captured = false;
-        }
-
-        if (!captured && window.get_mouse_button(GLFW_MOUSE_BUTTON_LEFT))
-        {
-            window.capture_mouse();
-            mouse_position = window.mouse_position();
-            captured = true;
+            if (captured)
+            {
+                window.uncapture_mouse();
+                captured = false;
+            }
+            else
+            {
+                window.capture_mouse();
+                mouse_position = window.mouse_position();
+                captured = true;
+            }
         }
 
         if (!captured) continue;

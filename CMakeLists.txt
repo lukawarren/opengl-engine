@@ -31,7 +31,12 @@ add_definitions(-DGLM_FORCE_SILENT_WARNINGS)
 add_subdirectory(lib/assimp)
 
 # Add files
-file(GLOB SOURCES src/*.cpp lib/glad/src/glad.c)
+file(GLOB SOURCES src/*.cpp
+    lib/glad/src/glad.c
+    lib/imgui/*.cpp
+    lib/imgui/backends/imgui_impl_opengl3.cpp
+    lib/imgui/backends/imgui_impl_glfw.cpp
+)
 
 # For Visual Studio, add header and shader files
 if(MSVC)
@@ -48,7 +53,10 @@ target_include_directories(${TARGET_NAME} PRIVATE
     "${PROJECT_SOURCE_DIR}/lib/glfw/include"
     "${PROJECT_SOURCE_DIR}/lib/glm/include"
     "${PROJECT_SOURCE_DIR}/lib/glad/include"
-    "${PROJECT_SOURCE_DIR}/lib/stb_image/")
+    "${PROJECT_SOURCE_DIR}/lib/stb_image/"
+    "${PROJECT_SOURCE_DIR}/lib/imgui/"
+    "${PROJECT_SOURCE_DIR}/lib/imgui/backends"
+)
 
 # C++ warnings and compiler flags
 if(MSVC)

@@ -106,7 +106,7 @@ float get_shadow(vec4 lightspace_position)
 
     for (int i = 0; i < samples; ++i)
     {
-        const float bias = 0.00005;
+        const float bias = 0.0001;
         float depth = texture(shadow_map, proj_coords.xy + poisson_disk[i] * texel_size * spread).r;
         float shadow = step(current_depth - bias, depth);
         total_shadow += shadow;
@@ -139,6 +139,6 @@ void main()
     if (colour.a < 0.5) discard;
 
     // Shadows
-    float shadow = max(get_shadow(out_lightspace_position), 0.1);
+    float shadow = max(get_shadow(out_lightspace_position), 0.4);
     frag_colour = colour * vec4(diffuse, 1.0) * shadow;
 }

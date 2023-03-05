@@ -31,6 +31,10 @@ bool Window::update()
     cached_mouse_buttons[1] = get_mouse_button(GLFW_MOUSE_BUTTON_RIGHT);
     cached_mouse_buttons[2] = get_mouse_button(GLFW_MOUSE_BUTTON_MIDDLE);
 
+    // Keyboard state
+    for (int i = 0; i <= GLFW_KEY_LAST; ++i)
+        cached_keyboard_buttons[i] = glfwGetKey(window, i) == GLFW_PRESS;
+
     glfwSwapBuffers(window);
     glfwPollEvents();
 
@@ -42,8 +46,11 @@ void Window::set_title(const std::string& title) const
     glfwSetWindowTitle(window, title.c_str());
 }
 
-bool Window::get_key(const int key) const
+bool Window::get_key(const int key, const bool repeat) const
 {
+    if (repeat == false && key >= 0 && key <= GLFW_KEY_LAST)
+        return glfwGetKey(window, key) == GLFW_PRESS && !cached_keyboard_buttons[key];
+
     return glfwGetKey(window, key) == GLFW_PRESS;
 }
 
