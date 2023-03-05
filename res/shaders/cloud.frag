@@ -5,15 +5,20 @@ uniform mat4 inverse_view_projection;
 uniform vec3 camera_position;
 uniform vec3 bounds_min;
 uniform vec3 bounds_max;
+uniform vec2 screen_size;
+uniform float z_near;
+uniform float z_far;
 
 // Noise
-uniform sampler2D noise_map;
+uniform sampler3D noise_map;
+uniform sampler2D depth_map;
+uniform sampler2D framebuffer;
 
 // Scattering settings
 uniform float scale = 0.05;
-uniform float density = 0.3;
-uniform float threshold = 0.01;
-const int steps = 32;
+uniform float density = 10;
+uniform float threshold = 0.1;
+const int steps = 128;
 
 layout (location = 0) out vec4 frag_colour;
 
@@ -35,19 +40,28 @@ vec2 get_ray_distance_to_box(vec3 position, vec3 direction)
 float get_density(vec3 position)
 {
     vec3 texture_pos = position * scale;
-    float sample = texture(noise_map, texture_pos.xz).r;
+    float sample = texture(noise_map, texture_pos).r;
     return max(0, sample - threshold) * density;
+}
+
+float linearise_depth(float d)
+{
+    return z_near * z_far / (z_far + d * (z_near - z_far));
 }
 
 void main()
 {
     // Figure out ray direction
-    vec2 screen_space = gl_FragCoord.xy / vec2(1600, 900);
+    vec2 screen_space = gl_FragCoord.xy / screen_size;
     vec4 frag_position = vec4(screen_space * 2.0 - 1.0, 1.0, 1.0);
     vec4 frag_direction = inverse_view_projection * frag_position;
 
     vec3 ray_origin = camera_position;
     vec3 ray_direction = normalize(frag_direction.xyz);
+
+    // Sample depth map
+    float depth_sample = texture(depth_map, screen_space.xy).r;
+    float depth = linearise_depth(depth_sample);
 
     // Signed distance field calculation
     vec2 ray_info = get_ray_distance_to_box(ray_origin, ray_direction);
@@ -56,7 +70,7 @@ void main()
 
     float distance_travelled = 0;
     float step_size = distance_inside / steps;
-    float max_distance = distance_inside; // TODO: take into account depth
+    float max_distance = min(depth - distance_to, distance_inside);
 
     // Perform ray march along intersection to get average density
     float total_density = 0;
@@ -66,7 +80,9 @@ void main()
         total_density += get_density(ray_position) * step_size;
         distance_travelled += step_size;
     }
-
     float transmittance = exp(-total_density);
-    frag_colour = vec4(vec3(1, 1, 1) * transmittance, 1.0);
+
+    // Blend with scene
+    vec4 original_colour = texture(framebuffer, screen_space);
+    frag_colour = original_colour * transmittance;
 }

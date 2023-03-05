@@ -10,7 +10,8 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
         Framebuffer(render_width(), render_height()),
         Framebuffer(render_width(), render_height())
     },
-    output_framebuffer(render_width(), render_height(), Framebuffer::DepthSettings::ENABLE_DEPTH)
+    output_framebuffer(render_width(), render_height(), Framebuffer::DepthSettings::ENABLE_DEPTH),
+    clouds_framebuffer(render_width(), render_height(), Framebuffer::DepthSettings::NO_DEPTH)
 {
     // Setup GL state
     glEnable(GL_DEPTH_TEST);
@@ -34,25 +35,29 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     water_shader.set_uniform("z_near", z_near);
     water_shader.set_uniform("z_far", z_far);
     water_shader.unbind();
+    cloud_shader.bind();
+    cloud_shader.set_uniform("z_near", z_near);
+    cloud_shader.set_uniform("z_far", z_far);
 
     // More texture units
     diffuse_shader.bind();
     diffuse_shader.set_uniform("diffuse_map", 0);
     diffuse_shader.set_uniform("normal_map",  1);
     diffuse_shader.set_uniform("shadow_map",  2);
-    diffuse_shader.set_uniform("noise_map",   3);
     composite_shader.bind();
     composite_shader.set_uniform("image_one", 0);
     composite_shader.set_uniform("image_two", 1);
+    cloud_shader.bind();
+    cloud_shader.set_uniform("noise_map",     0);
+    cloud_shader.set_uniform("depth_map",     1);
+    cloud_shader.set_uniform("framebuffer",   2);
 
     // Post processing settings
     bloom_shader.bind();
     bloom_shader.set_uniform("threshold", 1.0f);
 
     init_resources();
-
-    // Clouds
-    cloud_noise = new Texture("vnoise.png");
+    init_clouds();
 }
 
 bool Renderer::update(const Scene& scene)
@@ -68,12 +73,16 @@ bool Renderer::update(const Scene& scene)
         did_bake_shadows = true;
     }
 
-    // Render passes
+    // "Normal" render passes
     output_framebuffer.bind();
     diffuse_pass(scene, scene.camera, render_width(), render_height());
     water_pass(scene);
-    cloud_pass(scene);
     output_framebuffer.unbind();
+
+    // Clouds
+    clouds_framebuffer.bind();
+    cloud_pass(scene);
+    clouds_framebuffer.unbind();
 
     // Post processing
     glDisable(GL_CULL_FACE);
@@ -86,7 +95,7 @@ bool Renderer::update(const Scene& scene)
 
     // ...combining FBOs (with HDR pass)
     composite_shader.bind();
-    output_framebuffer.colour_texture->bind();
+    clouds_framebuffer.colour_texture->bind(); // normal scene
     bloom_framebuffer.colour_texture->bind(1); // bloom
     quad_mesh->draw();
 
@@ -343,8 +352,8 @@ void Renderer::bloom_pass()
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
     // Extract bright parts of image
-    output_framebuffer.colour_texture->bind();
     bloom_shader.bind();
+    clouds_framebuffer.colour_texture->bind();
     quad_mesh->draw();
     bloom_framebuffer.unbind();
 
@@ -413,12 +422,72 @@ void Renderer::sprite_pass(const Scene& scene)
     glEnable(GL_DEPTH_TEST);
 }
 
+void Renderer::init_clouds()
+{
+    const int size = 64;
+    const int n_points = 32;
+    std::vector<glm::ivec3> points;
+    std::vector<glm::ivec3> initial_points;
+    char* pixels = new char[size * size * size];
+
+    // Scatter points,
+    initial_points.reserve(n_points);
+    for (int i = 0; i < n_points; ++i)
+        initial_points.emplace_back(
+            rand() % size,
+            rand() % size,
+            rand() % size
+        );
+
+    // ...but duplicate 26 times to surround the texture in 3D
+    points.reserve(n_points * 27);
+    for (int z = -1; z <= 1; ++z)
+    {
+        for (int y = -1; y <= 1; ++y)
+        {
+            for (int x = -1; x <= 1; ++x)
+            {
+                glm::ivec3 offset(x, y, z);
+                for (const auto& point : initial_points)
+                    points.emplace_back(point + offset * size);
+            }
+        }
+    }
+
+    // Sample distance to nearest point for each pixel - "Worley noise" :)
+    const float max_distance = sqrt(size*size + size*size + size*size);
+    for (int z = 0; z < size; ++z)
+    {
+        for (int y = 0; y < size; ++y)
+        {
+            for (int x = 0; x < size; ++x)
+            {
+                float min_distance_squared = std::numeric_limits<float>::max();
+                for (size_t i = 0; i < points.size(); ++i)
+                {
+                    int dx = x - points[i].x;
+                    int dy = y - points[i].y;
+                    int dz = z - points[i].z;
+                    float distance_squared = dx * dx + dy * dy + dz * dz;
+                    min_distance_squared = std::min(min_distance_squared, distance_squared);
+                }
+
+                float brightness = sqrt(min_distance_squared) / max_distance;
+                pixels[z * size * size + y * size + x] = brightness * 255;
+            }
+        }
+    }
+
+    cloud_noise = new Texture(size, size, GL_R8, GL_RED, GL_UNSIGNED_BYTE, false, pixels, size);
+
+    delete[] pixels;
+}
+
 void Renderer::cloud_pass(const Scene& scene)
 {
-    // Matrices
-    Transform t = Transform {};
-    t.position = { 64.0f, 20.0f, 50.0f };
-    t.scale = glm::vec3(10.0f);
+    // Bounds
+    glm::vec3 min_bounds = glm::vec3(0.0f, 30.0f, 0.0f);
+    glm::vec3 max_bounds = glm::vec3(Chunk::size * 4.0f, 35.0f, Chunk::size * 4.0f);
     const glm::mat4 view_projection = scene.camera.projection_matrix(
         render_width(), render_height()
     ) * scene.camera.view_matrix();
@@ -426,20 +495,28 @@ void Renderer::cloud_pass(const Scene& scene)
     cloud_shader.bind();
 
     // Scene info
-    cloud_shader.set_uniform("mvp", view_projection * t.matrix());
+    cloud_shader.set_uniform("mvp", glm::mat4(1.0f));
     cloud_shader.set_uniform("inverse_view_projection", glm::inverse(view_projection));
     cloud_shader.set_uniform("camera_position", scene.camera.position);
-    cloud_shader.set_uniform("bounds_min", t.position - glm::vec3(5.0f));
-    cloud_shader.set_uniform("bounds_max", t.position + glm::vec3(5.0f));
+    cloud_shader.set_uniform("bounds_min", min_bounds);
+    cloud_shader.set_uniform("bounds_max", max_bounds);
+    cloud_shader.set_uniform("screen_size", glm::vec2 { render_width(), render_height() });
 
     // Scattering settings
-    cloud_shader.set_uniform("scale", 0.05f);
-    cloud_shader.set_uniform("density", 0.3f);
-    cloud_shader.set_uniform("threshold", 0.01f);
+    //cloud_shader.set_uniform("scale", 0.05f);
+    //cloud_shader.set_uniform("density", 0.3f);
+    //cloud_shader.set_uniform("threshold", 0.01f);
 
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     cloud_noise->bind();
-    cube_mesh->bind();
-    cube_mesh->draw();
+    output_framebuffer.depth_map->bind(1);
+    output_framebuffer.colour_texture->bind(2);
+    quad_mesh->bind();
+    quad_mesh->draw();
+    glDisable(GL_BLEND);
+    glEnable(GL_CULL_FACE);
 }
 
 unsigned int Renderer::render_width() const

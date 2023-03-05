@@ -37,6 +37,7 @@ private:
     Framebuffer bloom_framebuffer;
     Framebuffer blur_framebuffers[2];
     Framebuffer output_framebuffer;
+    Framebuffer clouds_framebuffer;
     unsigned int render_width() const;
     unsigned int render_height() const;
 
@@ -53,6 +54,7 @@ private:
 
     // Cloud rendering
     Texture* cloud_noise;
+    void init_clouds();
 
     bool did_bake_shadows = false;
 

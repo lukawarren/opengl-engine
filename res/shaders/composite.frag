@@ -29,5 +29,4 @@ void main()
     vec3 mapped = map_hdr(hdr);
     mapped = pow(mapped, vec3(1.0 / gamma));
     frag_colour = vec4(mapped, 1.0);
-    frag_colour = vec4(hdr_one, 1.0);
 }

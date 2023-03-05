@@ -12,21 +12,21 @@ Texture::Texture(const std::string& filename, const bool use_nearest_filtering)
 
     // Create and bind texture
     glGenTextures(1, &texture_id);
-    glBindTexture(GL_TEXTURE_2D, texture_id);
+    glBindTexture(texture_type, texture_id);
 
     // Upload data
     const auto format = (channels == 3 ? GL_RGB : GL_RGBA);
     const auto formatInternal = (channels == 3 ? GL_RGB8 : GL_RGBA8);
-    glTexImage2D(GL_TEXTURE_2D, 0, formatInternal, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(texture_type, 0, formatInternal, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 
     // Mipmaps
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, use_nearest_filtering ? GL_NEAREST_MIPMAP_LINEAR : GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, use_nearest_filtering ? GL_NEAREST : GL_LINEAR);
+    glGenerateMipmap(texture_type);
+    glTexParameteri(texture_type, GL_TEXTURE_MIN_FILTER, use_nearest_filtering ? GL_NEAREST_MIPMAP_LINEAR : GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(texture_type, GL_TEXTURE_MAG_FILTER, use_nearest_filtering ? GL_NEAREST : GL_LINEAR);
 
     // Texture wrapping
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(texture_type, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(texture_type, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     // Do anisotropic filtering (if we can)
     if (!use_nearest_filtering)
@@ -35,20 +35,20 @@ Texture::Texture(const std::string& filename, const bool use_nearest_filtering)
         {
             float max_anisotropy;
             glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_anisotropy);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, std::min(max_anisotropy, 16.0f));
+            glTexParameterf(texture_type, GL_TEXTURE_MAX_ANISOTROPY_EXT, std::min(max_anisotropy, 16.0f));
         }
         else std::cerr << "anisotropic filtering not supported" << std::endl;
     }
 
     // Unbind and free image from normal memory
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindTexture(texture_type, 0);
     stbi_image_free(data);
 }
 
 Texture::Texture(const std::array<std::string, 6> faces)
 {
     glGenTextures(1, &texture_id);
-    glBindTexture(GL_TEXTURE_2D, texture_id);
+    glBindTexture(texture_type, texture_id);
 
     // Load from disk
     int width, height, channels;
@@ -67,7 +67,7 @@ Texture::Texture(const std::array<std::string, 6> faces)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindTexture(texture_type, 0);
 }
 
 Texture::Texture(
@@ -77,45 +77,52 @@ Texture::Texture(
     const unsigned int format,
     const unsigned int type,
     const bool use_nearest_filtering,
-    const char* data)
+    const char* data,
+    const unsigned int depth)
 {
+    if (depth)
+        texture_type = GL_TEXTURE_3D;
+
     glGenTextures(1, &texture_id);
-    glBindTexture(GL_TEXTURE_2D, texture_id);
-    glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, format, type, data);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, use_nearest_filtering ? GL_NEAREST : GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, use_nearest_filtering ? GL_NEAREST : GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindTexture(texture_type, texture_id);
+
+    if (depth) glTexImage3D(texture_type, 0, internal_format, width, height, depth, 0, format, type, data);
+    else glTexImage2D(texture_type, 0, internal_format, width, height, 0, format, type, data);
+
+    glTexParameteri(texture_type, GL_TEXTURE_MIN_FILTER, use_nearest_filtering ? GL_NEAREST : GL_LINEAR);
+    glTexParameteri(texture_type, GL_TEXTURE_MAG_FILTER, use_nearest_filtering ? GL_NEAREST : GL_LINEAR);
+    glTexParameteri(texture_type, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(texture_type, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glBindTexture(texture_type, 0);
 }
 
 void Texture::clamp(const glm::vec4& colour, const bool to_border) const
 {
     const float border_colour[] = { colour.r, colour.g, colour.b, colour.a };
-    glBindTexture(GL_TEXTURE_2D, texture_id);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, to_border ? GL_CLAMP_TO_BORDER : GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, to_border ? GL_CLAMP_TO_BORDER : GL_CLAMP_TO_EDGE);
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_colour);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindTexture(texture_type, texture_id);
+    glTexParameteri(texture_type, GL_TEXTURE_WRAP_S, to_border ? GL_CLAMP_TO_BORDER : GL_CLAMP_TO_EDGE);
+    glTexParameteri(texture_type, GL_TEXTURE_WRAP_T, to_border ? GL_CLAMP_TO_BORDER : GL_CLAMP_TO_EDGE);
+    glTexParameterfv(texture_type, GL_TEXTURE_BORDER_COLOR, border_colour);
+    glBindTexture(texture_type, 0);
 }
 
 void Texture::set_as_texture_atlas(const int max_mipmap_level) const
 {
     // Limit mip-mapping so sub-textures don't go smaller than 1x1
-    glBindTexture(GL_TEXTURE_2D, texture_id);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, max_mipmap_level);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindTexture(texture_type, texture_id);
+    glTexParameteri(texture_type, GL_TEXTURE_MAX_LEVEL, max_mipmap_level);
+    glBindTexture(texture_type, 0);
 }
 
 void Texture::bind(const unsigned int unit) const
 {
     glActiveTexture(GL_TEXTURE0 + unit);
-    glBindTexture(GL_TEXTURE_2D, texture_id);
+    glBindTexture(texture_type, texture_id);
 }
 
 void Texture::unbind() const
 {
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindTexture(texture_type, 0);
 }
 
 Texture::~Texture()

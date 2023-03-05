@@ -9,7 +9,6 @@ in vec4 out_lightspace_position;
 uniform sampler2D diffuse_map;
 uniform sampler2D shadow_map;
 uniform sampler2D normal_map;
-uniform sampler2D noise_map;
 uniform bool has_normal_map;
 
 uniform vec3 ambient_light;

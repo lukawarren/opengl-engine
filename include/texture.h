@@ -7,7 +7,10 @@
 class Texture
 {
 public:
-    Texture(const std::string& filename, const bool use_nearest_filtering = false);
+    Texture(
+        const std::string& filename,
+        const bool use_nearest_filtering = false
+    );
 
     // For cubemaps
     Texture(const std::array<std::string, 6> faces);
@@ -20,7 +23,8 @@ public:
         const unsigned int format = GL_RGB,
         const unsigned int type = GL_UNSIGNED_BYTE,
         const bool use_nearest_filtering = false,
-        const char* data = NULL
+        const char* data = NULL,
+        const unsigned int depth = 0
     );
 
     Texture(const Texture&) = delete;
@@ -34,4 +38,5 @@ public:
 
     // OpenGL state
     unsigned int texture_id;
+    unsigned int texture_type  = GL_TEXTURE_2D;
 };
