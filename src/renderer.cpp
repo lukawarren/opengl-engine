@@ -117,8 +117,6 @@ bool Renderer::update(const Scene& scene)
     sprite_pass(scene);
 
     // ImGui
-    ImGui::Begin("Hello world");
-    ImGui::End();
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -444,8 +442,8 @@ void Renderer::sprite_pass(const Scene& scene)
 
 void Renderer::init_clouds()
 {
-    const int size = 64;
-    const int n_points = 32;
+    const int size = 32;
+    const int n_points = 16;
     std::vector<glm::ivec3> points;
     std::vector<glm::ivec3> initial_points;
     char* pixels = new char[size * size * size];
@@ -523,9 +521,15 @@ void Renderer::cloud_pass(const Scene& scene)
     cloud_shader.set_uniform("screen_size", glm::vec2 { render_width(), render_height() });
 
     // Scattering settings
-    //cloud_shader.set_uniform("scale", 0.05f);
-    //cloud_shader.set_uniform("density", 0.3f);
-    //cloud_shader.set_uniform("threshold", 0.01f);
+    static float scale = 0.05f, density = 10.0f, threshold = 0.1f;
+    ImGui::Begin("Clouds");
+    ImGui::SliderFloat("Scale", &scale, 0.0f, 1.0f);
+    ImGui::SliderFloat("Density", &density, 0.0f, 10.0f);
+    ImGui::SliderFloat("Threshold", &threshold, 0.0f, 1.0f);
+    ImGui::End();
+    cloud_shader.set_uniform("scale", scale);
+    cloud_shader.set_uniform("density", density);
+    cloud_shader.set_uniform("threshold", threshold);
 
     glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);

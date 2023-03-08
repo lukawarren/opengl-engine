@@ -6,7 +6,14 @@
 #include <stdexcept>
 #include <glad/glad.h>
 
-Shader::Shader(const std::string& filename)
+std::array<Shader::ShaderType, 3> Shader::shader_types =
+{{
+    { .extension = ".vert", .identifier = GL_VERTEX_SHADER   },
+    { .extension = ".frag", .identifier = GL_FRAGMENT_SHADER },
+    { .extension = ".comp", .identifier = GL_COMPUTE_SHADER  }
+}};
+
+Shader::Shader(const std::string& filename, const std::vector<ShaderTypeID>& shader_type_ids)
 {
     const auto read_file = [](const std::string path)
     {
@@ -16,34 +23,57 @@ Shader::Shader(const std::string& filename)
         return contents;
     };
 
+    struct ShaderTarget
+    {
+        std::string source;
+        unsigned int shader;
+        ShaderTypeID type_id;
+    };
+
     // Load from disk
-    const std::string vertex_source = read_file(filename + ".vert");
-    const std::string fragment_source = read_file(filename + ".frag");
-    const char* c_vertex = vertex_source.c_str();
-    const char* c_fragment = fragment_source.c_str();
+    std::vector<ShaderTarget> targets;
+    for (const ShaderTypeID id : shader_type_ids)
+    {
+        targets.emplace_back(ShaderTarget {
+            .source = read_file(filename + shader_types[id].extension),
+            .shader = 0,
+            .type_id = id
+        });
+    }
 
-    // Create and upload source code
-    unsigned int vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    unsigned int fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(vertex_shader, 1, &c_vertex, NULL);
-    glShaderSource(fragment_shader, 1, &c_fragment, NULL);
+    // Upload source code
+    for (auto& target : targets)
+    {
+        const char* c_str = target.source.c_str();
+        target.shader = glCreateShader(shader_types[target.type_id].identifier);
+        glShaderSource(target.shader, 1, &c_str, NULL);
+    }
 
-    // Compile and checkk for errors
-    glCompileShader(vertex_shader);
-    glCompileShader(fragment_shader);
-    handle_error(glGetShaderiv, glGetShaderInfoLog, vertex_shader, GL_COMPILE_STATUS, "vertex shader failed to compile", filename);
-    handle_error(glGetShaderiv, glGetShaderInfoLog, fragment_shader, GL_COMPILE_STATUS, "fragment shader failed to compile", filename);
+    // Compile and check for errors
+    for (auto& target : targets)
+    {
+        const std::string& extension = shader_types[target.type_id].extension;
+        glCompileShader(target.shader);
+        handle_error(
+            glGetShaderiv,
+            glGetShaderInfoLog,
+            target.shader,
+            GL_COMPILE_STATUS,
+            extension + " shader failed to compile",
+            filename
+        );
+    }
 
     // Link into one "program"
     program = glCreateProgram();
-    glAttachShader(program, vertex_shader);
-    glAttachShader(program, fragment_shader);
+    for (auto& target : targets)
+        glAttachShader(program, target.shader);
     glLinkProgram(program);
     handle_error(glGetProgramiv, glGetProgramInfoLog, program, GL_LINK_STATUS, "shader failed to link", filename);
 
     // Shaders themselves no longer needed - all we need is the final program
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
+    for (auto& target : targets)
+        glDeleteShader(target.shader);
 }
 
 void Shader::bind() const
