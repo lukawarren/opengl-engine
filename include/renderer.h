@@ -51,9 +51,10 @@ private:
     BloomShader bloom_shader;
     SkyboxShader skybox_shader;
     CloudShader cloud_shader;
+    WorleyShader worley_shader;
 
     // Cloud rendering
-    Texture* cloud_noise;
+    Texture* worley_noise;
     void init_clouds();
 
     bool did_bake_shadows = false;

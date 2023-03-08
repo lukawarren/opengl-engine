@@ -34,6 +34,7 @@ public:
     void set_as_texture_atlas(const int max_mipmap_level) const;
 
     void bind(const unsigned int unit = 0) const;
+    void bind_image(const unsigned int internal_format, const unsigned int access) const;
     void unbind() const;
 
     // OpenGL state

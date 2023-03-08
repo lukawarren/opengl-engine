@@ -15,9 +15,9 @@ uniform sampler2D depth_map;
 uniform sampler2D framebuffer;
 
 // Scattering settings
-uniform float scale = 0.05;
+uniform float scale = 0.7;
 uniform float density = 10;
-uniform float threshold = 0.1;
+uniform float threshold = 0.8;
 const int steps = 128;
 
 layout (location = 0) out vec4 frag_colour;
@@ -39,7 +39,7 @@ vec2 get_ray_distance_to_box(vec3 position, vec3 direction)
 
 float get_density(vec3 position)
 {
-    vec3 texture_pos = position * scale;
+    vec3 texture_pos = position * 0.01 * scale;
     float sample = texture(noise_map, texture_pos).r;
     return max(0, sample - threshold) * density;
 }

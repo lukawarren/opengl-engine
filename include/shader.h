@@ -30,10 +30,7 @@ public:
     static std::array<ShaderType, 3> shader_types;
 
 public:
-    Shader(const std::string& filename, const std::vector<ShaderTypeID>& shader_type_ids = {
-        ShaderTypeID::Vertex,
-        ShaderTypeID::Fragment
-    });
+    Shader(const std::string& filename, const std::vector<ShaderTypeID>& shader_type_ids);
     Shader(const Shader&) = delete;
     ~Shader();
 
@@ -60,17 +57,23 @@ private:
 };
 
 // Shader classes
-#define SHADER(x, y) class x : public Shader {\
+#define SHADER(x, y, z) class x : public Shader {\
 public:\
-    x() : Shader(y) {}\
+    x() : Shader(y, z) {}\
 };
 
-SHADER(DiffuseShader, "diffuse")
-SHADER(WaterShader, "water")
-SHADER(QuadShader, "quad")
-SHADER(ShadowMapShader, "shadow_map")
-SHADER(CompositeShader, "composite")
-SHADER(BlurShader, "blur")
-SHADER(BloomShader, "bloom")
-SHADER(SkyboxShader, "skybox")
-SHADER(CloudShader, "cloud")
+#define SHADER_NORMAL {\
+    ShaderTypeID::Vertex,\
+    ShaderTypeID::Fragment\
+}
+
+SHADER(DiffuseShader,   "diffuse",      SHADER_NORMAL)
+SHADER(WaterShader,     "water",        SHADER_NORMAL)
+SHADER(QuadShader,      "quad",         SHADER_NORMAL)
+SHADER(ShadowMapShader, "shadow_map",   SHADER_NORMAL)
+SHADER(CompositeShader, "composite",    SHADER_NORMAL)
+SHADER(BlurShader,      "blur",         SHADER_NORMAL)
+SHADER(BloomShader,     "bloom",        SHADER_NORMAL)
+SHADER(SkyboxShader,    "skybox",       SHADER_NORMAL)
+SHADER(CloudShader,     "cloud",        SHADER_NORMAL)
+SHADER(WorleyShader,    "worley",       { ShaderTypeID::Compute })

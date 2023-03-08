@@ -81,7 +81,7 @@ void Window::uncapture_mouse() const
 
 void Window::init_glfw(const std::string& name)
 {
-    // Init OpenGL core (>= 4.3 for debugging output)
+    // Init OpenGL core (>= 4.3 for debugging output and compute shaders)
     glfwInit();
 #ifndef __APPLE__
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);

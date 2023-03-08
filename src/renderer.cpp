@@ -442,70 +442,23 @@ void Renderer::sprite_pass(const Scene& scene)
 
 void Renderer::init_clouds()
 {
-    const int size = 32;
-    const int n_points = 16;
-    std::vector<glm::ivec3> points;
-    std::vector<glm::ivec3> initial_points;
-    char* pixels = new char[size * size * size];
+    // Create texture for compute shader
+    const int size = 256;
+    worley_noise = new Texture(size, size, GL_R32F, GL_RED, GL_FLOAT, false, nullptr, size);
+    worley_noise->bind_image(GL_R32F, GL_READ_WRITE);
 
-    // Scatter points,
-    initial_points.reserve(n_points);
-    for (int i = 0; i < n_points; ++i)
-        initial_points.emplace_back(
-            rand() % size,
-            rand() % size,
-            rand() % size
-        );
-
-    // ...but duplicate 26 times to surround the texture in 3D
-    points.reserve(n_points * 27);
-    for (int z = -1; z <= 1; ++z)
-    {
-        for (int y = -1; y <= 1; ++y)
-        {
-            for (int x = -1; x <= 1; ++x)
-            {
-                glm::ivec3 offset(x, y, z);
-                for (const auto& point : initial_points)
-                    points.emplace_back(point + offset * size);
-            }
-        }
-    }
-
-    // Sample distance to nearest point for each pixel - "Worley noise" :)
-    const float max_distance = sqrt(size*size + size*size + size*size);
-    for (int z = 0; z < size; ++z)
-    {
-        for (int y = 0; y < size; ++y)
-        {
-            for (int x = 0; x < size; ++x)
-            {
-                float min_distance_squared = std::numeric_limits<float>::max();
-                for (size_t i = 0; i < points.size(); ++i)
-                {
-                    int dx = x - points[i].x;
-                    int dy = y - points[i].y;
-                    int dz = z - points[i].z;
-                    float distance_squared = dx * dx + dy * dy + dz * dz;
-                    min_distance_squared = std::min(min_distance_squared, distance_squared);
-                }
-
-                float brightness = sqrt(min_distance_squared) / max_distance;
-                pixels[z * size * size + y * size + x] = brightness * 255;
-            }
-        }
-    }
-
-    cloud_noise = new Texture(size, size, GL_R8, GL_RED, GL_UNSIGNED_BYTE, false, pixels, size);
-
-    delete[] pixels;
+    // Generate nosie and wait
+    worley_shader.bind();
+    worley_shader.set_uniform("output_size", glm::vec3 { size, size, size });
+    glDispatchCompute(size, size, size);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
 
 void Renderer::cloud_pass(const Scene& scene)
 {
     // Bounds
     glm::vec3 min_bounds = glm::vec3(0.0f, 30.0f, 0.0f);
-    glm::vec3 max_bounds = glm::vec3(Chunk::size * 4.0f, 35.0f, Chunk::size * 4.0f);
+    glm::vec3 max_bounds = glm::vec3(Chunk::size * 4.0f, 50.0f, Chunk::size * 4.0f);
     const glm::mat4 view_projection = scene.camera.projection_matrix(
         render_width(), render_height()
     ) * scene.camera.view_matrix();
@@ -521,7 +474,7 @@ void Renderer::cloud_pass(const Scene& scene)
     cloud_shader.set_uniform("screen_size", glm::vec2 { render_width(), render_height() });
 
     // Scattering settings
-    static float scale = 0.05f, density = 10.0f, threshold = 0.1f;
+    static float scale = 0.7f, density = 10.0f, threshold = 0.8f;
     ImGui::Begin("Clouds");
     ImGui::SliderFloat("Scale", &scale, 0.0f, 1.0f);
     ImGui::SliderFloat("Density", &density, 0.0f, 10.0f);
@@ -534,7 +487,7 @@ void Renderer::cloud_pass(const Scene& scene)
     glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    cloud_noise->bind();
+    worley_noise->bind();
     output_framebuffer.depth_map->bind(1);
     output_framebuffer.colour_texture->bind(2);
     quad_mesh->bind();
@@ -555,6 +508,6 @@ unsigned int Renderer::render_height() const
 
 Renderer::~Renderer()
 {
-    delete cloud_noise;
+    delete worley_noise;
     free_resources();
 }

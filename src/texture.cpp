@@ -120,6 +120,11 @@ void Texture::bind(const unsigned int unit) const
     glBindTexture(texture_type, texture_id);
 }
 
+void Texture::bind_image(const unsigned int internal_format, const unsigned int access) const
+{
+    glBindImageTexture(0, texture_id, 0, GL_FALSE, 0, access, internal_format);
+}
+
 void Texture::unbind() const
 {
     glBindTexture(texture_type, 0);
