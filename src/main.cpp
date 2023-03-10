@@ -10,7 +10,7 @@ void chunk_loop(Scene& scene, const Window& window);
 
 int main()
 {
-    Renderer renderer("lukacraft", width, height, 1.0);
+    Renderer renderer("lukacraft", width, height, RENDER_SCALE);
     Window& window = renderer.window;
     window.capture_mouse();
 
@@ -106,7 +106,7 @@ Scene chunk_scene()
     // Lighting
     scene.skybox_tint = { 0.5f, 0.5f, 1.0f };
     scene.ambient_light = { 0.05f, 0.05f, 0.1f };
-    scene.sun.position *= 50.0f;
+    scene.sun.position *= 1000.0f;
     scene.sun.colour *= 0.8f;
 
     auto& monkey = scene.entities[0];

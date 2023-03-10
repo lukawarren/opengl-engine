@@ -1,4 +1,5 @@
 #version 330 core
+#define M_PI 3.14159265359
 
 // Scene info
 uniform mat4 inverse_view_projection;
@@ -8,6 +9,8 @@ uniform vec3 bounds_max;
 uniform vec2 screen_size;
 uniform float z_near;
 uniform float z_far;
+uniform vec3 light_position;
+uniform vec3 light_colour;
 
 // Noise
 uniform sampler3D noise_map;
@@ -18,7 +21,10 @@ uniform sampler2D framebuffer;
 uniform float scale = 0.7;
 uniform float density = 10;
 uniform float threshold = 0.8;
-const int steps = 128;
+uniform float brightness = 4.0;
+
+// Quality settings
+const int steps = 256;
 
 layout (location = 0) out vec4 frag_colour;
 
@@ -74,15 +80,31 @@ void main()
 
     // Perform ray march along intersection to get average density
     float total_density = 0;
+    float light_energy = 0;
+
     while (distance_travelled < max_distance)
     {
         vec3 ray_position = ray_origin + ray_direction * (distance_to + distance_travelled);
-        total_density += get_density(ray_position) * step_size;
+
+        // Sample density
+        float density = get_density(ray_position);
+        total_density += density * step_size;
         distance_travelled += step_size;
+
+        // Sample light
+        light_energy += exp(-density);
     }
+
     float transmittance = exp(-total_density);
+
+    // Silver lining
+    float silver_lining = transmittance;
+    light_energy += silver_lining * 100;
+
+    vec4 colour = vec4(1, 1, 1, 1) * light_energy * 0.001 * brightness * vec4(light_colour, 1.0);
 
     // Blend with scene
     vec4 original_colour = texture(framebuffer, screen_space);
     frag_colour = original_colour * transmittance;
+    frag_colour = mix(colour, original_colour, transmittance);
 }

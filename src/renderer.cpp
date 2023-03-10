@@ -440,16 +440,17 @@ void Renderer::sprite_pass(const Scene& scene)
     glEnable(GL_DEPTH_TEST);
 }
 
-void Renderer::init_clouds()
+void Renderer::init_clouds(const float scale)
 {
     // Create texture for compute shader
-    const int size = 256;
+    const int size = 64;
     worley_noise = new Texture(size, size, GL_R32F, GL_RED, GL_FLOAT, false, nullptr, size);
     worley_noise->bind_image(GL_R32F, GL_READ_WRITE);
 
     // Generate nosie and wait
     worley_shader.bind();
     worley_shader.set_uniform("output_size", glm::vec3 { size, size, size });
+    worley_shader.set_uniform("scale", scale);
     glDispatchCompute(size, size, size);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
@@ -457,11 +458,26 @@ void Renderer::init_clouds()
 void Renderer::cloud_pass(const Scene& scene)
 {
     // Bounds
-    glm::vec3 min_bounds = glm::vec3(0.0f, 30.0f, 0.0f);
-    glm::vec3 max_bounds = glm::vec3(Chunk::size * 4.0f, 50.0f, Chunk::size * 4.0f);
+    glm::vec3 min_bounds = glm::vec3(-Chunk::size * 4.0f, 60.0f, -Chunk::size * 4.0f);
+    glm::vec3 max_bounds = glm::vec3(Chunk::size * 8.0f, 90.0f, Chunk::size * 8.0f);
     const glm::mat4 view_projection = scene.camera.projection_matrix(
         render_width(), render_height()
     ) * scene.camera.view_matrix();
+
+    // Scattering settings
+    static float scale = 0.565f, density = 10.0f, threshold = 0.75f, brightness = 4.0f, texture_scale = 6.0f;
+    ImGui::Begin("Clouds");
+    ImGui::SliderFloat("Scale", &scale, 0.0f, 10.0f);
+    ImGui::SliderFloat("Density", &density, 0.0f, 30.0f);
+    ImGui::SliderFloat("Threshold", &threshold, 0.0f, 1.0f);
+    ImGui::SliderFloat("Brightness", &brightness, 0.0f, 10.0f);
+    ImGui::SliderFloat("Texture scale", &texture_scale, 0.0f, 10.0f);
+    if (ImGui::Button("Recalculate noise"))
+    {
+        delete worley_noise;
+        init_clouds(texture_scale);
+    }
+    ImGui::End();
 
     cloud_shader.bind();
 
@@ -472,17 +488,14 @@ void Renderer::cloud_pass(const Scene& scene)
     cloud_shader.set_uniform("bounds_min", min_bounds);
     cloud_shader.set_uniform("bounds_max", max_bounds);
     cloud_shader.set_uniform("screen_size", glm::vec2 { render_width(), render_height() });
+    cloud_shader.set_uniform("light_position", scene.sun.position);
+    cloud_shader.set_uniform("light_colour", scene.sun.colour);
 
     // Scattering settings
-    static float scale = 0.7f, density = 10.0f, threshold = 0.8f;
-    ImGui::Begin("Clouds");
-    ImGui::SliderFloat("Scale", &scale, 0.0f, 1.0f);
-    ImGui::SliderFloat("Density", &density, 0.0f, 10.0f);
-    ImGui::SliderFloat("Threshold", &threshold, 0.0f, 1.0f);
-    ImGui::End();
     cloud_shader.set_uniform("scale", scale);
     cloud_shader.set_uniform("density", density);
     cloud_shader.set_uniform("threshold", threshold);
+    cloud_shader.set_uniform("brightness", brightness);
 
     glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);

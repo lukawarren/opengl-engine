@@ -3,6 +3,7 @@
 layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 layout(r32f, binding = 0) uniform image3D output_image;
 uniform vec3 output_size;
+uniform float scale;
 
 /*
     Compute shader to generate layered Worley noise.
@@ -125,7 +126,6 @@ void main()
     vec3 sample_coord = gl_GlobalInvocationID.xyz / output_size;
     ivec3 texel_coord = ivec3(gl_GlobalInvocationID.xyz);
 
-    const float scale = 2.0;
     vec4 col = vec4(0.0);
 
     float pfbm = mix(1.0, perlinfbm(sample_coord, 4.0, 7), 0.5);
@@ -139,6 +139,7 @@ void main()
     // Combine into final image
     float value = col.g + col.b + col.a + col.r;
     value /= 4;
+    value = min(max(value, 0.0), 1.0);
 
     imageStore(output_image, texel_coord, vec4(value, 0, 0, 0));
 }

@@ -28,6 +28,5 @@ void main()
     // Exposure tone mapping + gamma correction
     vec3 mapped = map_hdr(hdr);
     mapped = pow(mapped, vec3(1.0 / gamma));
-    mapped = hdr; // DO NOT COMMIT
     frag_colour = vec4(mapped, 1.0);
 }
