@@ -14,11 +14,13 @@ uniform vec3 light_colour;
 
 // Noise
 uniform sampler3D noise_map;
+uniform sampler3D detail_map;
 uniform sampler2D depth_map;
 uniform sampler2D framebuffer;
 
 // Scattering settings
 uniform float scale = 0.7;
+uniform float detail_scale = 1.0;
 uniform float density = 10;
 uniform float threshold = 0.8;
 uniform float brightness = 4.0;
@@ -45,9 +47,24 @@ vec2 get_ray_distance_to_box(vec3 position, vec3 direction)
 
 float get_density(vec3 position)
 {
+    // Sample main texture
     vec3 texture_pos = position * 0.01 * scale;
     float sample = texture(noise_map, texture_pos).r;
-    return max(0, sample - threshold) * density;
+    float d = max(0, sample - threshold) * density;
+
+    // Fade at edges
+    const float fade_distance = 50;
+    float edge_distance_x = min(fade_distance, min(position.x - bounds_min.x, bounds_max.x - position.x));
+    float edge_distance_y = min(fade_distance, min(position.y - bounds_min.y, bounds_max.y - position.y));
+    float edge_distance_z = min(fade_distance, min(position.z - bounds_min.z, bounds_max.z - position.z));
+    float weight = min(edge_distance_x, min(edge_distance_y, edge_distance_z)) / fade_distance;
+    d *= weight;
+
+    // Add detailed noise
+    float detail = texture(detail_map, texture_pos * detail_scale).r;
+    d -= detail * (1-d);
+
+    return min(max(d, 0), 1);
 }
 
 float linearise_depth(float d)
@@ -100,8 +117,9 @@ void main()
     // Silver lining
     float silver_lining = transmittance;
     light_energy += silver_lining * 100;
+    light_energy /= steps;
 
-    vec4 colour = vec4(1, 1, 1, 1) * light_energy * 0.001 * brightness * vec4(light_colour, 1.0);
+    vec4 colour = vec4(1, 1, 1, 1) * light_energy * 0.1 * brightness * vec4(light_colour, 1.0);
 
     // Blend with scene
     vec4 original_colour = texture(framebuffer, screen_space);

@@ -54,7 +54,7 @@ private:
     WorleyShader worley_shader;
 
     // Cloud rendering
-    Texture* worley_noise;
+    Texture* cloud_noises[2];
     void init_clouds(const float scale = 6.0f);
 
     bool did_bake_shadows = false;

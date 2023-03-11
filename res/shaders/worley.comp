@@ -4,6 +4,7 @@ layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 layout(r32f, binding = 0) uniform image3D output_image;
 uniform vec3 output_size;
 uniform float scale;
+uniform bool just_perlin;
 
 /*
     Compute shader to generate layered Worley noise.
@@ -127,19 +128,29 @@ void main()
     ivec3 texel_coord = ivec3(gl_GlobalInvocationID.xyz);
 
     vec4 col = vec4(0.0);
+    float value;
 
-    float pfbm = mix(1.0, perlinfbm(sample_coord, 4.0, 7), 0.5);
-    pfbm = abs(pfbm * 2.0 - 1.0); // billowy perlin noise
+    if (!just_perlin)
+    {
+        float pfbm = mix(1.0, perlinfbm(sample_coord, 4.0, 7), 0.5);
+        pfbm = abs(pfbm * 2.0 - 1.0); // billowy perlin noise
 
-    col.g += worleyFbm(vec3(sample_coord), scale);
-    col.b += worleyFbm(vec3(sample_coord), scale * 2.0);
-    col.a += worleyFbm(vec3(sample_coord), scale * 4.0);
-    col.r += remap(pfbm, 0.0, 1.0, col.g, 1.0); // perlin-worley
+        col.g += worleyFbm(vec3(sample_coord), scale);
+        col.b += worleyFbm(vec3(sample_coord), scale * 2.0);
+        col.a += worleyFbm(vec3(sample_coord), scale * 4.0);
+        col.r += remap(pfbm, 0.0, 1.0, col.g, 1.0); // perlin-worley
 
-    // Combine into final image
-    float value = col.g + col.b + col.a + col.r;
-    value /= 4;
+        // Combine into final image
+        value = col.g + col.b + col.a + col.r;
+        value /= 4;
+    }
+    else
+    {
+        float pfbm = mix(1.0, perlinfbm(sample_coord * scale, 4.0, 7), 0.5);
+        pfbm = abs(pfbm * 2.0 - 1.0);
+        value = remap(pfbm, 0.0, 1.0, col.g, 1.0);
+    }
+
     value = min(max(value, 0.0), 1.0);
-
     imageStore(output_image, texel_coord, vec4(value, 0, 0, 0));
 }

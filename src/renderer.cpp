@@ -58,8 +58,9 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     composite_shader.set_uniform("image_two", 1);
     cloud_shader.bind();
     cloud_shader.set_uniform("noise_map", 0);
-    cloud_shader.set_uniform("depth_map", 1);
-    cloud_shader.set_uniform("framebuffer", 2);
+    cloud_shader.set_uniform("detail_map", 1);
+    cloud_shader.set_uniform("depth_map", 2);
+    cloud_shader.set_uniform("framebuffer", 3);
 
     // Post processing settings
     bloom_shader.bind();
@@ -443,15 +444,32 @@ void Renderer::sprite_pass(const Scene& scene)
 void Renderer::init_clouds(const float scale)
 {
     // Create texture for compute shader
-    const int size = 64;
-    worley_noise = new Texture(size, size, GL_R32F, GL_RED, GL_FLOAT, false, nullptr, size);
-    worley_noise->bind_image(GL_R32F, GL_READ_WRITE);
+    int width = 64;
+    int height = 64;
+    int depth = 64;
+    cloud_noises[0] = new Texture(width, height, GL_R32F, GL_RED, GL_FLOAT, false, nullptr, depth);
+    cloud_noises[0]->bind_image(GL_R32F, GL_READ_WRITE);
 
-    // Generate nosie and wait
+    // Generate worley noise and wait
     worley_shader.bind();
-    worley_shader.set_uniform("output_size", glm::vec3 { size, size, size });
+    worley_shader.set_uniform("output_size", glm::vec3 { width, height, depth });
     worley_shader.set_uniform("scale", scale);
-    glDispatchCompute(size, size, size);
+    worley_shader.set_uniform("just_perlin", false);
+    glDispatchCompute(width, height, depth);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+    // Generate high-res simplex noise
+    width = 256;
+    height = 256;
+    depth = 256;
+    cloud_noises[1] = new Texture(width, height, GL_R32F, GL_RED, GL_FLOAT, false, nullptr, depth);
+    cloud_noises[1]->bind_image(GL_R32F, GL_READ_WRITE);
+
+    // Same compute shader; different params
+    worley_shader.set_uniform("output_size", glm::vec3 { width, height, depth });
+    worley_shader.set_uniform("scale", scale * 5.0f);
+    worley_shader.set_uniform("just_perlin", true);
+    glDispatchCompute(width, height, depth);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
 
@@ -459,22 +477,30 @@ void Renderer::cloud_pass(const Scene& scene)
 {
     // Bounds
     glm::vec3 min_bounds = glm::vec3(-Chunk::size * 4.0f, 60.0f, -Chunk::size * 4.0f);
-    glm::vec3 max_bounds = glm::vec3(Chunk::size * 8.0f, 90.0f, Chunk::size * 8.0f);
+    glm::vec3 max_bounds = glm::vec3(Chunk::size * 8.0f, 150.0f, Chunk::size * 8.0f);
     const glm::mat4 view_projection = scene.camera.projection_matrix(
         render_width(), render_height()
     ) * scene.camera.view_matrix();
 
     // Scattering settings
-    static float scale = 0.565f, density = 10.0f, threshold = 0.75f, brightness = 4.0f, texture_scale = 6.0f;
+    static float
+        scale = 0.2f,
+        detail_scale = 1.2f,
+        density = 10.0f,
+        threshold = 0.75f,
+        brightness = 8.0f,
+        texture_scale = 6.0f;
     ImGui::Begin("Clouds");
     ImGui::SliderFloat("Scale", &scale, 0.0f, 10.0f);
+    ImGui::SliderFloat("Detail scale", &detail_scale, 0.0f, 10.0f);
     ImGui::SliderFloat("Density", &density, 0.0f, 30.0f);
     ImGui::SliderFloat("Threshold", &threshold, 0.0f, 1.0f);
     ImGui::SliderFloat("Brightness", &brightness, 0.0f, 10.0f);
     ImGui::SliderFloat("Texture scale", &texture_scale, 0.0f, 10.0f);
     if (ImGui::Button("Recalculate noise"))
     {
-        delete worley_noise;
+        delete cloud_noises[0];
+        delete cloud_noises[1];
         init_clouds(texture_scale);
     }
     ImGui::End();
@@ -493,6 +519,7 @@ void Renderer::cloud_pass(const Scene& scene)
 
     // Scattering settings
     cloud_shader.set_uniform("scale", scale);
+    cloud_shader.set_uniform("detail_scale", detail_scale);
     cloud_shader.set_uniform("density", density);
     cloud_shader.set_uniform("threshold", threshold);
     cloud_shader.set_uniform("brightness", brightness);
@@ -500,9 +527,10 @@ void Renderer::cloud_pass(const Scene& scene)
     glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    worley_noise->bind();
-    output_framebuffer.depth_map->bind(1);
-    output_framebuffer.colour_texture->bind(2);
+    cloud_noises[0]->bind(0);
+    cloud_noises[1]->bind(1);
+    output_framebuffer.depth_map->bind(2);
+    output_framebuffer.colour_texture->bind(3);
     quad_mesh->bind();
     quad_mesh->draw();
     glDisable(GL_BLEND);
@@ -521,6 +549,7 @@ unsigned int Renderer::render_height() const
 
 Renderer::~Renderer()
 {
-    delete worley_noise;
+    delete cloud_noises[0];
+    delete cloud_noises[1];
     free_resources();
 }
