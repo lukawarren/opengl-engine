@@ -37,5 +37,10 @@ struct Scene
     glm::vec3 ambient_light = { 0.1f, 0.1f, 0.1f };
     glm::vec3 skybox_tint = { 1.0f, 1.0f, 1.0f };
 
+    // Atmopshere
+    float cloud_size = Chunk::size * 16.0f;
+    float cloud_height_min = 60.0f;
+    float cloud_height_max = 150.0f;
+
     Camera camera = {};
 };

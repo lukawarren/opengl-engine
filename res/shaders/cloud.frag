@@ -9,7 +9,6 @@ uniform vec3 bounds_max;
 uniform vec2 screen_size;
 uniform float z_near;
 uniform float z_far;
-uniform vec3 light_position;
 uniform vec3 light_colour;
 
 // Noise
@@ -19,14 +18,14 @@ uniform sampler2D depth_map;
 uniform sampler2D framebuffer;
 
 // Scattering settings
-uniform float scale = 0.7;
-uniform float detail_scale = 1.0;
+uniform float scale = 0.2;
+uniform float detail_scale = 1.2;
 uniform float density = 10;
-uniform float threshold = 0.8;
-uniform float brightness = 4.0;
+uniform float threshold = 0.75;
+uniform float brightness = 8.0;
 
 // Quality settings
-const int steps = 256;
+uniform int steps = 256;
 
 layout (location = 0) out vec4 frag_colour;
 

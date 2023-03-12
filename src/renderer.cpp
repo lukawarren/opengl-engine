@@ -476,13 +476,20 @@ void Renderer::init_clouds(const float scale)
 void Renderer::cloud_pass(const Scene& scene)
 {
     // Bounds
-    glm::vec3 min_bounds = glm::vec3(-Chunk::size * 4.0f, 60.0f, -Chunk::size * 4.0f);
-    glm::vec3 max_bounds = glm::vec3(Chunk::size * 8.0f, 150.0f, Chunk::size * 8.0f);
+    glm::vec3 min_bounds = glm::vec3(
+        scene.camera.position.x - scene.cloud_size,
+        scene.cloud_height_min,
+        scene.camera.position.z - scene.cloud_size);
+    glm::vec3 max_bounds = glm::vec3(
+        scene.camera.position.x + scene.cloud_size,
+        scene.cloud_height_max,
+        scene.camera.position.z + scene.cloud_size
+    );
     const glm::mat4 view_projection = scene.camera.projection_matrix(
         render_width(), render_height()
     ) * scene.camera.view_matrix();
 
-    // Scattering settings
+    // GUI
     static float
         scale = 0.2f,
         detail_scale = 1.2f,
@@ -490,6 +497,7 @@ void Renderer::cloud_pass(const Scene& scene)
         threshold = 0.75f,
         brightness = 8.0f,
         texture_scale = 6.0f;
+    static int steps = 256;
     ImGui::Begin("Clouds");
     ImGui::SliderFloat("Scale", &scale, 0.0f, 10.0f);
     ImGui::SliderFloat("Detail scale", &detail_scale, 0.0f, 10.0f);
@@ -497,6 +505,7 @@ void Renderer::cloud_pass(const Scene& scene)
     ImGui::SliderFloat("Threshold", &threshold, 0.0f, 1.0f);
     ImGui::SliderFloat("Brightness", &brightness, 0.0f, 10.0f);
     ImGui::SliderFloat("Texture scale", &texture_scale, 0.0f, 10.0f);
+    ImGui::SliderInt("Steps", &steps, 1, 1024);
     if (ImGui::Button("Recalculate noise"))
     {
         delete cloud_noises[0];
@@ -514,7 +523,6 @@ void Renderer::cloud_pass(const Scene& scene)
     cloud_shader.set_uniform("bounds_min", min_bounds);
     cloud_shader.set_uniform("bounds_max", max_bounds);
     cloud_shader.set_uniform("screen_size", glm::vec2 { render_width(), render_height() });
-    cloud_shader.set_uniform("light_position", scene.sun.position);
     cloud_shader.set_uniform("light_colour", scene.sun.colour);
 
     // Scattering settings
@@ -523,6 +531,7 @@ void Renderer::cloud_pass(const Scene& scene)
     cloud_shader.set_uniform("density", density);
     cloud_shader.set_uniform("threshold", threshold);
     cloud_shader.set_uniform("brightness", brightness);
+    cloud_shader.set_uniform("steps", steps);
 
     glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
