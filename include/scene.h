@@ -6,6 +6,7 @@
 #include "light.h"
 #include "chunk.h"
 #include "resources.h"
+#include "cloud.h"
 
 typedef std::shared_ptr<Texture> Skybox;
 #define MAKE_SKYBOX(a, b, c, d, e, f) std::make_shared<Texture>(std::array<std::string, 6> {\
@@ -38,10 +39,7 @@ struct Scene
     glm::vec3 skybox_tint = { 1.0f, 1.0f, 1.0f };
 
     // Atmopshere
-    float cloud_size = Chunk::size * 16.0f;
-    float cloud_height_min = 60.0f;
-    float cloud_height_max = 150.0f;
-    float cloud_time = 0.0f;
+    CloudSettings cloud_settings = {};
 
     Camera camera = {};
 };

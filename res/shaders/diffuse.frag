@@ -5,15 +5,20 @@ in vec3 out_normal;
 in vec3 out_position;
 in mat3 out_tbn;
 in vec4 out_lightspace_position;
+in vec3 out_world_space_position;
 
 uniform sampler2D diffuse_map;
 uniform sampler2D shadow_map;
 uniform sampler2D normal_map;
+uniform sampler3D cloud_map;
 uniform bool has_normal_map;
 
 uniform vec3 ambient_light;
 uniform vec3 light_position;
 uniform vec3 light_colour;
+
+uniform float cloud_scale;
+uniform float cloud_offset;
 
 layout (location = 0) out vec4 frag_colour;
 
@@ -115,6 +120,14 @@ float get_shadow(vec4 lightspace_position)
     return total_shadow / samples;
 }
 
+float get_cloud_shadow(vec3 world_position)
+{
+    vec2 cloud_pos = (world_position.xz + cloud_offset) * 0.01 * cloud_scale;
+    float density = texture(cloud_map, vec3(cloud_pos, 0)).r;
+    density = pow(density, 4) * 2;
+    return max(1.0 - density, 0);
+}
+
 void main()
 {
     // Normal mapping
@@ -140,5 +153,6 @@ void main()
 
     // Shadows
     float shadow = max(get_shadow(out_lightspace_position), 0.4);
-    frag_colour = colour * vec4(diffuse, 1.0) * shadow;
+    float cloud_shadow = max(get_cloud_shadow(out_world_space_position), 0.3);
+    frag_colour = colour * vec4(diffuse, 1.0) * shadow * cloud_shadow;
 }

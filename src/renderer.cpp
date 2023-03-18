@@ -53,6 +53,7 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     diffuse_shader.set_uniform("diffuse_map", 0);
     diffuse_shader.set_uniform("normal_map", 1);
     diffuse_shader.set_uniform("shadow_map", 2);
+    diffuse_shader.set_uniform("cloud_map", 3);
     composite_shader.bind();
     composite_shader.set_uniform("image_one", 0);
     composite_shader.set_uniform("image_two", 1);
@@ -70,7 +71,7 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     init_clouds();
 }
 
-bool Renderer::update(const Scene& scene)
+bool Renderer::update(Scene& scene)
 {
     // Update window; poll events
     double start = glfwGetTime();
@@ -153,9 +154,14 @@ void Renderer::diffuse_pass(
         shader.bind();
         shader.set_uniform("view", view_matrix);
         shader.set_uniform("projection", projection_matrix);
+
         shader.set_uniform("ambient_light", scene.ambient_light);
         shader.set_uniform("light_position", scene.sun.position);
         shader.set_uniform("light_colour", scene.sun.colour);
+
+        shader.set_uniform("cloud_scale", scene.cloud_settings.scale * 4.0f);
+        shader.set_uniform("cloud_offset", scene.cloud_settings.time);
+
         shader.set_uniform("lightspace_matrix", scene.sun.get_light_projection_matrix(
             scene.camera,
             render_width(),
@@ -229,6 +235,7 @@ void Renderer::diffuse_pass(
 
     // Common textures
     scene.sun.shadow_buffer->depth_map->bind(2);
+    cloud_noises[0]->bind(3);
 
     // Render objects
     entities();
@@ -473,46 +480,31 @@ void Renderer::init_clouds(const float scale)
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
 
-void Renderer::cloud_pass(const Scene& scene)
+void Renderer::cloud_pass(Scene& scene)
 {
     // Bounds
+    auto& cloud = scene.cloud_settings;
     glm::vec3 min_bounds = glm::vec3(
-        scene.camera.position.x - scene.cloud_size,
-        scene.cloud_height_min,
-        scene.camera.position.z - scene.cloud_size);
+        scene.camera.position.x - cloud.size,
+        cloud.height_min,
+        scene.camera.position.z - cloud.size
+    );
     glm::vec3 max_bounds = glm::vec3(
-        scene.camera.position.x + scene.cloud_size,
-        scene.cloud_height_max,
-        scene.camera.position.z + scene.cloud_size
+        scene.camera.position.x + cloud.size,
+        cloud.height_max,
+        scene.camera.position.z + cloud.size
     );
     const glm::mat4 view_projection = scene.camera.projection_matrix(
         render_width(), render_height()
     ) * scene.camera.view_matrix();
 
     // GUI
-    static float
-        scale = 0.083f,
-        detail_scale = 1.2f,
-        density = 10.0f,
-        threshold = 0.75f,
-        brightness = 11.0f,
-        texture_scale = 8.0f;
-    static int steps = 256;
-    ImGui::Begin("Clouds");
-    ImGui::SliderFloat("Scale", &scale, 0.0f, 10.0f);
-    ImGui::SliderFloat("Detail scale", &detail_scale, 0.0f, 10.0f);
-    ImGui::SliderFloat("Density", &density, 0.0f, 30.0f);
-    ImGui::SliderFloat("Threshold", &threshold, 0.0f, 1.0f);
-    ImGui::SliderFloat("Brightness", &brightness, 0.0f, 20.0f);
-    ImGui::SliderFloat("Texture scale", &texture_scale, 0.0f, 10.0f);
-    ImGui::SliderInt("Steps", &steps, 1, 1024);
-    if (ImGui::Button("Recalculate noise"))
+    if (cloud.draw_debug_gui())
     {
         delete cloud_noises[0];
         delete cloud_noises[1];
-        init_clouds(texture_scale);
+        init_clouds(cloud.texture_scale);
     }
-    ImGui::End();
 
     cloud_shader.bind();
 
@@ -526,15 +518,15 @@ void Renderer::cloud_pass(const Scene& scene)
     cloud_shader.set_uniform("light_colour", scene.sun.colour);
 
     // Nosie
-    cloud_shader.set_uniform("offset", scene.cloud_time);
+    cloud_shader.set_uniform("offset", cloud.time);
 
     // Scattering settings
-    cloud_shader.set_uniform("scale", scale);
-    cloud_shader.set_uniform("detail_scale", detail_scale);
-    cloud_shader.set_uniform("density", density);
-    cloud_shader.set_uniform("threshold", threshold);
-    cloud_shader.set_uniform("brightness", brightness);
-    cloud_shader.set_uniform("steps", steps);
+    cloud_shader.set_uniform("scale", cloud.scale);
+    cloud_shader.set_uniform("detail_scale", cloud.detail_scale);
+    cloud_shader.set_uniform("density", cloud.density);
+    cloud_shader.set_uniform("threshold", cloud.threshold);
+    cloud_shader.set_uniform("brightness", cloud.brightness);
+    cloud_shader.set_uniform("steps", cloud.steps);
 
     glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);

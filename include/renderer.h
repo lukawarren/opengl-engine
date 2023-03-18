@@ -12,7 +12,7 @@ public:
     Renderer(const std::string& title, const int width, const int height, const float render_scale);
     ~Renderer();
 
-    bool update(const Scene& scene);
+    bool update(Scene& scene);
 
     Window window;
 
@@ -30,7 +30,7 @@ private:
     void bloom_pass();
     void blur_pass(const Texture& texture, const Framebuffer& final_framebuffer);
     void sprite_pass(const Scene& scene);
-    void cloud_pass(const Scene& scene);
+    void cloud_pass(Scene& scene);
 
     // Output
     float render_scale;
@@ -55,7 +55,7 @@ private:
 
     // Cloud rendering
     Texture* cloud_noises[2];
-    void init_clouds(const float scale = 8.0f);
+    void init_clouds(const float scale = default_texture_scale);
 
     bool did_bake_shadows = false;
 
