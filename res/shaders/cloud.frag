@@ -16,6 +16,7 @@ uniform sampler3D noise_map;
 uniform sampler3D detail_map;
 uniform sampler2D depth_map;
 uniform sampler2D framebuffer;
+uniform float offset;
 
 // Scattering settings
 uniform float scale = 0.2;
@@ -47,7 +48,7 @@ vec2 get_ray_distance_to_box(vec3 position, vec3 direction)
 float get_density(vec3 position)
 {
     // Sample main texture
-    vec3 texture_pos = position * 0.01 * scale;
+    vec3 texture_pos = (position + offset) * 0.01 * scale;
     float sample = texture(noise_map, texture_pos).r;
     float d = max(0, sample - threshold) * density;
 
@@ -60,7 +61,7 @@ float get_density(vec3 position)
     d *= weight;
 
     // Add detailed noise
-    float detail = texture(detail_map, texture_pos * detail_scale).r;
+    float detail = texture(detail_map, (texture_pos + offset * 0.001) * detail_scale).r;
     d -= detail * (1-d);
 
     return min(max(d, 0), 1);

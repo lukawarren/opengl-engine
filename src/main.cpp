@@ -33,6 +33,9 @@ int main()
         // Water waves
         for (auto& water : scene.waters) water.update(delta / 10.0f);
 
+        // Moving clouds
+        scene.cloud_time += delta * 5.0f;
+
         // Deal with mouse grabbing
         if (window.get_key(GLFW_KEY_ESCAPE, false))
         {

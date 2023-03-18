@@ -491,19 +491,19 @@ void Renderer::cloud_pass(const Scene& scene)
 
     // GUI
     static float
-        scale = 0.2f,
+        scale = 0.083f,
         detail_scale = 1.2f,
         density = 10.0f,
         threshold = 0.75f,
-        brightness = 8.0f,
-        texture_scale = 6.0f;
+        brightness = 11.0f,
+        texture_scale = 8.0f;
     static int steps = 256;
     ImGui::Begin("Clouds");
     ImGui::SliderFloat("Scale", &scale, 0.0f, 10.0f);
     ImGui::SliderFloat("Detail scale", &detail_scale, 0.0f, 10.0f);
     ImGui::SliderFloat("Density", &density, 0.0f, 30.0f);
     ImGui::SliderFloat("Threshold", &threshold, 0.0f, 1.0f);
-    ImGui::SliderFloat("Brightness", &brightness, 0.0f, 10.0f);
+    ImGui::SliderFloat("Brightness", &brightness, 0.0f, 20.0f);
     ImGui::SliderFloat("Texture scale", &texture_scale, 0.0f, 10.0f);
     ImGui::SliderInt("Steps", &steps, 1, 1024);
     if (ImGui::Button("Recalculate noise"))
@@ -524,6 +524,9 @@ void Renderer::cloud_pass(const Scene& scene)
     cloud_shader.set_uniform("bounds_max", max_bounds);
     cloud_shader.set_uniform("screen_size", glm::vec2 { render_width(), render_height() });
     cloud_shader.set_uniform("light_colour", scene.sun.colour);
+
+    // Nosie
+    cloud_shader.set_uniform("offset", scene.cloud_time);
 
     // Scattering settings
     cloud_shader.set_uniform("scale", scale);

@@ -41,6 +41,7 @@ struct Scene
     float cloud_size = Chunk::size * 16.0f;
     float cloud_height_min = 60.0f;
     float cloud_height_max = 150.0f;
+    float cloud_time = 0.0f;
 
     Camera camera = {};
 };
