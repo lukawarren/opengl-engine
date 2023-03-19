@@ -81,11 +81,13 @@ Framebuffer::Framebuffer(const unsigned int width, const unsigned int height, co
 void Framebuffer::bind() const
 {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glViewport(0,0, width, height);
 }
 
-void Framebuffer::unbind() const
+void Framebuffer::unbind(unsigned int previous_width, unsigned int previous_height) const
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0,0, previous_width, previous_height);
 }
 
 Framebuffer::~Framebuffer()

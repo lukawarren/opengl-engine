@@ -5,7 +5,6 @@
 class Framebuffer
 {
 public:
-
     enum class DepthSettings
     {
         NO_DEPTH,
@@ -22,7 +21,7 @@ public:
     ~Framebuffer();
 
     void bind() const;
-    void unbind() const;
+    void unbind(unsigned int previous_width, unsigned int previous_height) const;
 
     unsigned int width;
     unsigned int height;

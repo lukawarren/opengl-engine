@@ -31,7 +31,7 @@ add_definitions(-DGLM_FORCE_SILENT_WARNINGS)
 add_subdirectory(lib/assimp)
 
 # Add files
-file(GLOB SOURCES src/*.cpp
+file(GLOB SOURCES src/*.cpp src/*/*.cpp
     lib/glad/src/glad.c
     lib/imgui/*.cpp
     lib/imgui/backends/imgui_impl_opengl3.cpp
