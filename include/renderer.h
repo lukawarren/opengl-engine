@@ -20,12 +20,13 @@ private:
 
     // Output
     float render_scale;
-    Framebuffer output_framebuffer;
     unsigned int render_width() const;
     unsigned int render_height() const;
 
     // Render passes
-    DiffusePass     diffuse_pass;
+    GBufferPass     g_buffer_pass;
+    LightingPass    lighting_pass;
+    SkyPass         sky_pass;
     WaterPass       water_pass;
     ShadowPass      shadow_pass;
     BloomPass       bloom_pass;

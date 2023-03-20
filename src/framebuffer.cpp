@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include "framebuffer.h"
 
-Framebuffer::Framebuffer(const unsigned int width, const unsigned int height, const DepthSettings depth_settings)
+Framebuffer::Framebuffer(const unsigned int width, const unsigned int height, const DepthSettings depth_settings, const bool is_g_buffer)
 {
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -29,6 +29,17 @@ Framebuffer::Framebuffer(const unsigned int width, const unsigned int height, co
     {
         glDrawBuffer(GL_NONE);
         glReadBuffer(GL_NONE);
+    }
+
+    // If G-buffer, add normal and position textures
+    if (is_g_buffer)
+    {
+        this->normal_texture.emplace(width, height, GL_RGB32F, GL_RGB, GL_FLOAT);
+        this->position_texture.emplace(width, height, GL_RGB32F, GL_RGB, GL_FLOAT);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, normal_texture->texture_id, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, position_texture->texture_id, 0);
+        unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+        glDrawBuffers(3, attachments);
     }
 
     if (depth_settings != DepthSettings::NO_DEPTH)

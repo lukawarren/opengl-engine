@@ -52,7 +52,8 @@ void CloudPass::render(
     Scene& scene,
     const glm::mat4& view,
     const glm::mat4& projection,
-    const Framebuffer& input_framebuffer
+    const Texture& input_colour,
+    const Texture& input_depth
 )
 {
     // Bounds
@@ -105,17 +106,15 @@ void CloudPass::render(
 
     // Render
     output_framebuffer.bind();
-    glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
     noises[0]->bind(0);
     noises[1]->bind(1);
-    input_framebuffer.depth_map->bind(2);
-    input_framebuffer.colour_texture->bind(3);
+    input_depth.bind(2);
+    input_colour.bind(3);
     quad_mesh->bind();
     quad_mesh->draw();
     glDisable(GL_BLEND);
-    glEnable(GL_CULL_FACE);
 }
 
 CloudPass::~CloudPass()

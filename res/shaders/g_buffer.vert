@@ -6,23 +6,19 @@ layout (location = 2) in vec3 normal;
 layout (location = 3) in vec3 tangent;
 
 uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
+uniform mat4 view_projection;
 uniform vec4 clip_plane;
-uniform mat4 lightspace_matrix;
 
-out vec2 out_texture_coord;
+out vec4 out_position;
 out vec3 out_normal;
+out vec2 out_texture_coord;
 out mat3 out_tbn;
-out vec4 out_lightspace_position;
-out vec3 out_world_space_position;
 
 void main()
 {
     // Work out position
     vec4 world_space = model * vec4(pos, 1.0);
-    gl_Position = projection * view * world_space;
-    out_lightspace_position = lightspace_matrix * world_space;
+    gl_Position = view_projection * world_space;
 
     // Clipping for planar reflections
     gl_ClipDistance[0] = dot(world_space, clip_plane);
@@ -33,8 +29,8 @@ void main()
     T = normalize(T - dot(T, N) * N);
     vec3 B = cross(N, T);
 
-    out_tbn = mat3(T, B, N);
-    out_texture_coord = texture_coord;
+    out_position = world_space;
     out_normal = transpose(inverse(mat3(model))) * normal; // Apply model matrix to normal!
-    out_world_space_position = world_space.xyz;
+    out_texture_coord = texture_coord;
+    out_tbn = mat3(T, B, N);
 }

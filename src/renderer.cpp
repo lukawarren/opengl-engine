@@ -8,13 +8,12 @@
 Renderer::Renderer(const std::string& title, const int width, const int height, const float render_scale) :
     window(title, width, height),
     render_scale(render_scale),
-    output_framebuffer(render_width(), render_height(), Framebuffer::DepthSettings::ENABLE_DEPTH),
+    g_buffer_pass(render_width(), render_height()),
+    lighting_pass(render_width(), render_height()),
     bloom_pass(render_width(), render_height()),
     cloud_pass(render_width(), render_height())
 {
     // Setup GL state
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glViewport(0, 0, render_width(), render_height());
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -47,6 +46,10 @@ bool Renderer::update(Scene& scene)
     const auto projection = scene.camera.projection_matrix(render_width(), render_height());
     const auto light_projection = scene.sun.get_light_projection_matrix(scene.camera, render_width(), render_height());
 
+    // Enable culling, etc.
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+
     // Shadows
     if (BAKE_SHADOWMAPS == false || !did_bake_shadows)
     {
@@ -54,16 +57,31 @@ bool Renderer::update(Scene& scene)
         did_bake_shadows = true;
     }
 
-    // "Normal" render passes
-    output_framebuffer.bind();
-    diffuse_pass.render(
+    // Fill G-buffer
+    g_buffer_pass.render(scene, view, projection);
+
+    // Culling, etc. no longer needed
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+
+    // Lighting
+    lighting_pass.render(
         scene,
         view,
         projection,
         light_projection,
-        cloud_pass.noises[0]
+        cloud_pass.noises[0],
+        *scene.sun.shadow_buffer->depth_map,
+        g_buffer_pass.g_buffer
     );
-    water_pass.render(
+
+    // Skybox
+    sky_pass.render(scene, view, projection, g_buffer_pass.g_buffer);
+
+    // All future state only renders quads
+    quad_mesh->bind();
+
+    /*water_pass.render(
         scene,
         view,
         projection,
@@ -71,20 +89,19 @@ bool Renderer::update(Scene& scene)
         cloud_pass.noises[0],
         output_framebuffer,
         diffuse_pass
-    );
+    );*/
 
     // Clouds (whose framebuffer now becomes the main output)
     cloud_pass.render(
         scene,
         view,
         projection,
-        output_framebuffer
+        *lighting_pass.output_framebuffer.colour_texture,
+        *g_buffer_pass.g_buffer.depth_map
     );
 
-    // Post processing - all passes need the quad mesh bound
-    glDisable(GL_CULL_FACE);
-    quad_mesh->bind();
-    bloom_pass.render(cloud_pass.output_framebuffer.colour_texture.value());
+    // Post processing
+    bloom_pass.render(*cloud_pass.output_framebuffer.colour_texture);
 
     // Display scaled output...
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -105,7 +122,6 @@ bool Renderer::update(Scene& scene)
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     glViewport(0, 0, render_width(), render_height());
-    glEnable(GL_CULL_FACE);
 
     // Calculate FPS
     double end = glfwGetTime();

@@ -4,7 +4,6 @@ SpritePass::SpritePass() : RenderPass() {}
 
 void SpritePass::render(const Scene& scene, const glm::mat4& projection)
 {
-    glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     shader.bind();
 
@@ -20,5 +19,4 @@ void SpritePass::render(const Scene& scene, const glm::mat4& projection)
     }
 
     glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
 }

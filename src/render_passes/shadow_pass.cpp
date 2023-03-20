@@ -7,6 +7,9 @@ void ShadowPass::render(
     const glm::mat4& light_projection
 )
 {
+    // Depth stuff not enabled by default
+    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
     // "Peter-panning" work-around
     glCullFace(GL_FRONT);
 

@@ -18,8 +18,7 @@ void WaterPass::render(
     const glm::mat4& projection,
     const glm::mat4& light_projection,
     const Texture* cloud_noise,
-    const Framebuffer& output_framebuffer,
-    DiffusePass& diffuse
+    const Framebuffer& output_framebuffer
 )
 {
     // NOTE: clipping is used so that we can render from behind
@@ -33,28 +32,28 @@ void WaterPass::render(
 
         // Use new view matrix, but old (normal) projection matrix
         const glm::mat4 reflection_view = water.reflection_camera(scene.camera).view_matrix();
-        diffuse.render(
-            scene,
-            reflection_view,
-            projection,
-            light_projection,
-            cloud_noise,
-            glm::vec4(0, 1, 0, -water.transform.position.y+0.1f)
-            // Add small offset to fix glitches at edges ^^
-        );
+        // diffuse.render(
+        //     scene,
+        //     reflection_view,
+        //     projection,
+        //     light_projection,
+        //     cloud_noise,
+        //     glm::vec4(0, 1, 0, -water.transform.position.y+0.1f)
+        //     // Add small offset to fix glitches at edges ^^
+        // );
 
         // Refractions: much the same (but with default view matrix)
         buffer = water.refraction_buffer;
         buffer->bind();
-        diffuse.render(
-            scene,
-            view,
-            projection,
-            light_projection,
-            cloud_noise,
-            glm::vec4(0, -1, 0, water.transform.position.y+0.1f)
-            // Add small offset to fix glitches at edges ^^
-        );
+        // diffuse.render(
+        //     scene,
+        //     view,
+        //     projection,
+        //     light_projection,
+        //     cloud_noise,
+        //     glm::vec4(0, -1, 0, water.transform.position.y+0.1f)
+        //     // Add small offset to fix glitches at edges ^^
+        // );
     }
     glDisable(GL_CLIP_DISTANCE0);
 

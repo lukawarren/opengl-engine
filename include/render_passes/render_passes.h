@@ -9,22 +9,53 @@ public:
     virtual ~RenderPass() {};
 };
 
-class DiffusePass : public RenderPass
+class GBufferPass : public RenderPass
 {
 public:
-    DiffusePass();
+    GBufferPass(const unsigned int width, const unsigned int height);
+    void render(
+        const Scene& scene,
+        const glm::mat4& view,
+        const glm::mat4& projection,
+        const std::optional<glm::vec4> clip_plane = {}
+    );
+    Framebuffer g_buffer;
+
+private:
+    GBufferShader shader;
+};
+
+class LightingPass : public RenderPass
+{
+public:
+    LightingPass(const unsigned int width, const unsigned int height);
     void render(
         const Scene& scene,
         const glm::mat4& view,
         const glm::mat4& projection,
         const glm::mat4& light_projection,
         const Texture* cloud_noise,
-        const std::optional<glm::vec4> clip_plane = {}
+        const Texture& shadow_map,
+        const Framebuffer& g_buffer
     );
-
+    Framebuffer output_framebuffer;
 private:
-    DiffuseShader diffuse_shader;
+    LightingShader shader;
     SkyboxShader skybox_shader;
+};
+
+class SkyPass : public RenderPass
+{
+public:
+    SkyPass();
+    void render(
+        const Scene& scene,
+        const glm::mat4& view,
+        const glm::mat4& projection,
+        const Framebuffer& g_buffer
+    );
+private:
+    SkyboxShader shader;
 };
 
 class WaterPass : public RenderPass
@@ -37,8 +68,7 @@ public:
         const glm::mat4& projection,
         const glm::mat4& light_projection,
         const Texture* cloud_noise,
-        const Framebuffer& output_framebuffer,
-        DiffusePass& diffuse
+        const Framebuffer& output_framebuffer
     );
 
 private:
@@ -91,7 +121,8 @@ public:
         Scene& scene,
         const glm::mat4& view,
         const glm::mat4& projection,
-        const Framebuffer& input_framebuffer
+        const Texture& input_colour,
+        const Texture& input_depth
     );
     Framebuffer output_framebuffer;
     Texture* noises[2];

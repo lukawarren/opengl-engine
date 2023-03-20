@@ -16,7 +16,7 @@ void BloomPass::render(const Texture& texture)
 {
     // Setup framebuffer
     output_framebuffer.bind();
-    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
 
     // Extract bright parts of image
     bloom_shader.bind();
@@ -32,9 +32,6 @@ void BloomPass::blur(const Texture& texture)
 {
     blur_shader.bind();
     quad_mesh->bind();
-
-    // Cheaper to just disable depth tests instead of clearing every time
-    glDisable(GL_DEPTH_TEST);
 
     // Horizontal
     texture.bind();
@@ -59,6 +56,4 @@ void BloomPass::blur(const Texture& texture)
     blur_framebuffers[0].colour_texture->bind();
     blur_shader.set_uniform("horizontal", false);
     quad_mesh->draw();
-
-    glEnable(GL_DEPTH_TEST);
 }

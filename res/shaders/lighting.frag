@@ -1,21 +1,18 @@
 #version 330 core
 
 in vec2 out_texture_coord;
-in vec3 out_normal;
-in vec3 out_position;
-in mat3 out_tbn;
-in vec4 out_lightspace_position;
-in vec3 out_world_space_position;
 
-uniform sampler2D diffuse_map;
+uniform sampler2D g_albedo;
+uniform sampler2D g_normal;
+uniform sampler2D g_position;
+
 uniform sampler2D shadow_map;
-uniform sampler2D normal_map;
 uniform sampler3D cloud_map;
-uniform bool has_normal_map;
 
 uniform vec3 ambient_light;
 uniform vec3 light_position;
 uniform vec3 light_colour;
+uniform mat4 lightspace;
 
 uniform float cloud_scale;
 uniform float cloud_offset;
@@ -130,29 +127,19 @@ float get_cloud_shadow(vec3 world_position)
 
 void main()
 {
-    // Normal mapping
-    vec3 normal;
-    if (has_normal_map)
-    {
-        normal = texture(normal_map, out_texture_coord).rgb;
-        normal = normal * 2.0 - 1.0;
-        normal = normalize(out_tbn * normal);
-    }
-    else
-        normal = normalize(out_normal);
-
+    // Sample g-buffer
+    vec3 albedo = texture(g_albedo, out_texture_coord).xyz;
+    vec3 normal = texture(g_normal, out_texture_coord).xyz;
+    vec3 position = texture(g_position, out_texture_coord).xyz;
+    vec4 lightspace_position = lightspace * vec4(position, 1.0);
 
     // Diffuse lighting - assume light to be a direction (e.g. the sun and i.e. not a point light)
     vec3 light_direction = normalize(light_position);
     vec3 diffuse = max(dot(normal, light_direction), 0.0) * light_colour;
     diffuse += ambient_light;
 
-    // Ignore transparency
-    vec4 colour = texture(diffuse_map, out_texture_coord);
-    if (colour.a < 0.5) discard;
-
     // Shadows
-    float shadow = max(get_shadow(out_lightspace_position), 0.4);
-    float cloud_shadow = max(get_cloud_shadow(out_world_space_position), 0.3);
-    frag_colour = colour * vec4(diffuse, 1.0) * shadow * cloud_shadow;
+    float shadow = max(get_shadow(lightspace_position), 0.4);
+    float cloud_shadow = max(get_cloud_shadow(position.xyz), 0.3);
+    frag_colour = vec4(albedo, 1.0) * vec4(diffuse, 1.0) * shadow * cloud_shadow;
 }
