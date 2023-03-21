@@ -10,8 +10,8 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     render_scale(render_scale),
     g_buffer_pass(render_width(), render_height()),
     lighting_pass(render_width(), render_height()),
-    bloom_pass(render_width(), render_height()),
-    cloud_pass(render_width(), render_height())
+    bloom_pass(render_width() / 2, render_height() / 2),
+    cloud_pass(render_width() / 2, render_height() / 2)
 {
     // Setup GL state
     glCullFace(GL_BACK);
@@ -67,8 +67,6 @@ bool Renderer::update(Scene& scene)
     // Lighting
     lighting_pass.render(
         scene,
-        view,
-        projection,
         light_projection,
         cloud_pass.noises[0],
         *scene.sun.shadow_buffer->depth_map,
@@ -91,17 +89,21 @@ bool Renderer::update(Scene& scene)
         diffuse_pass
     );*/
 
-    // Clouds (whose framebuffer now becomes the main output)
-    cloud_pass.render(
-        scene,
-        view,
-        projection,
-        *lighting_pass.output_framebuffer.colour_texture,
-        *g_buffer_pass.g_buffer.depth_map
-    );
+    // Clouds (whose framebuffer may now become the main output)
+    if (scene.cloud_settings.enabled)
+    {
+        cloud_pass.render(
+            scene,
+            view,
+            projection,
+            *g_buffer_pass.g_buffer.depth_map
+        );
+    }
+
+    Texture& output = *lighting_pass.output_framebuffer.colour_texture;
 
     // Post processing
-    bloom_pass.render(*cloud_pass.output_framebuffer.colour_texture);
+    bloom_pass.render(output);
 
     // Display scaled output...
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -110,8 +112,9 @@ bool Renderer::update(Scene& scene)
 
     // ...combining FBOs (with HDR pass)
     composite_pass.render(
-        *cloud_pass.output_framebuffer.colour_texture,
-        *bloom_pass.output_framebuffer.colour_texture
+        output,
+        *bloom_pass.get_output().colour_texture,
+        *cloud_pass.output_framebuffer.colour_texture
     );
 
     // Sprites

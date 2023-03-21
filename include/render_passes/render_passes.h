@@ -31,8 +31,6 @@ public:
     LightingPass(const unsigned int width, const unsigned int height);
     void render(
         const Scene& scene,
-        const glm::mat4& view,
-        const glm::mat4& projection,
         const glm::mat4& light_projection,
         const Texture* cloud_noise,
         const Texture& shadow_map,
@@ -88,18 +86,29 @@ private:
     ShadowMapShader shader;
 };
 
+class BlurPass : public RenderPass
+{
+public:
+    BlurPass(const unsigned int width, const unsigned int height);
+    void render(const std::optional<Texture*> texture = {}, std::optional<Framebuffer*> output = {});
+    Framebuffer& get_default_input();
+    Framebuffer& get_default_output();
+
+private:
+    BlurShader shader;
+    Framebuffer framebuffers[2];
+};
+
 class BloomPass : public RenderPass
 {
 public:
     BloomPass(const unsigned int width, const unsigned int height);
     void render(const Texture& texture);
-    Framebuffer output_framebuffer;
+    Framebuffer& get_output();
 
 private:
-    void blur(const Texture& texture);
-    BlurShader blur_shader;
     BloomShader bloom_shader;
-    Framebuffer blur_framebuffers[2];
+    BlurPass blur_pass;
 };
 
 class SpritePass : public RenderPass
@@ -121,7 +130,6 @@ public:
         Scene& scene,
         const glm::mat4& view,
         const glm::mat4& projection,
-        const Texture& input_colour,
         const Texture& input_depth
     );
     Framebuffer output_framebuffer;
@@ -131,13 +139,14 @@ private:
     void init(const float scale);
     CloudShader cloud_shader;
     WorleyShader worley_shader;
+    BlurPass blur_pass;
 };
 
 class CompositePass : public RenderPass
 {
 public:
     CompositePass();
-    void render(const Texture& one, const Texture& two);
+    void render(const Texture& one, const Texture& two, const Texture& three);
 
 private:
     CompositeShader shader;

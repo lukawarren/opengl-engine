@@ -12,6 +12,7 @@ struct CloudSettings
     float height_min = 60.0f;
     float height_max = 150.0f;
     float scale = 0.083f;
+    bool enabled = true;
 
     // Time
     float time = 0.0f;

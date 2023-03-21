@@ -2,14 +2,14 @@
 
 CloudPass::CloudPass(const unsigned int width, const unsigned int height) :
     RenderPass(),
-    output_framebuffer(width, height)
+    output_framebuffer(width, height),
+    blur_pass(width, height)
 {
     cloud_shader.bind();
     cloud_shader.bind();
     cloud_shader.set_uniform("noise_map",       0);
     cloud_shader.set_uniform("detail_map",      1);
     cloud_shader.set_uniform("depth_map",       2);
-    cloud_shader.set_uniform("framebuffer",     3);
     cloud_shader.set_uniform("z_near",          z_near);
     cloud_shader.set_uniform("z_far",           z_far);
 
@@ -52,7 +52,6 @@ void CloudPass::render(
     Scene& scene,
     const glm::mat4& view,
     const glm::mat4& projection,
-    const Texture& input_colour,
     const Texture& input_depth
 )
 {
@@ -106,15 +105,14 @@ void CloudPass::render(
 
     // Render
     output_framebuffer.bind();
-    glEnable(GL_BLEND);
     glClear(GL_COLOR_BUFFER_BIT);
     noises[0]->bind(0);
     noises[1]->bind(1);
     input_depth.bind(2);
-    input_colour.bind(3);
     quad_mesh->bind();
     quad_mesh->draw();
-    glDisable(GL_BLEND);
+
+    blur_pass.render(&output_framebuffer.colour_texture.value(), &output_framebuffer);
 }
 
 CloudPass::~CloudPass()

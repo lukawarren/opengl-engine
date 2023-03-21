@@ -80,7 +80,7 @@ int main()
         // Confine rotation
         camera->pitch = std::max(std::min(camera->pitch, 90.0f), -90.0f);
 
-        chunk_loop(scene, window);
+        //chunk_loop(scene, window);
     }
 
     return 0;
@@ -146,8 +146,10 @@ Scene sponza_scene()
         .camera = Camera({ -6.0f, 3.5f, 0.0f }, 30.0f, 90.0f, 0.0f)
     };
 
+    scene.cloud_settings.enabled = false;
+
     scene.sun.position *= 20.0f;
-    scene.sun.colour *= 1.5f;
+    scene.sun.colour *= 2.5f;
 
     auto* sponza = &scene.entities[0];
     sponza->transform.scale = glm::vec3(0.01f);

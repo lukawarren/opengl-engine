@@ -14,8 +14,6 @@ LightingPass::LightingPass(const unsigned int width, const unsigned int height) 
 
 void LightingPass::render(
     const Scene& scene,
-    const glm::mat4& view,
-    const glm::mat4& projection,
     const glm::mat4& light_projection,
     const Texture* cloud_noise,
     const Texture& shadow_map,

@@ -15,7 +15,6 @@ uniform vec3 light_colour;
 uniform sampler3D noise_map;
 uniform sampler3D detail_map;
 uniform sampler2D depth_map;
-uniform sampler2D framebuffer;
 uniform float offset;
 
 // Scattering settings
@@ -120,9 +119,6 @@ void main()
     light_energy /= steps;
 
     vec4 colour = vec4(1, 1, 1, 1) * light_energy * 0.1 * brightness * vec4(light_colour, 1.0);
-
-    // Blend with scene
-    vec4 original_colour = texture(framebuffer, screen_space);
-    frag_colour = original_colour * transmittance;
-    frag_colour = mix(colour, original_colour, transmittance);
+    frag_colour = colour;
+    frag_colour.a = transmittance;
 }

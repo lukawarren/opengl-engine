@@ -13,24 +13,24 @@ void main()
 {
     vec2 uv = out_texture_coord;
     vec2 texel_size = 1.0 / textureSize(image, 0);
-    vec3 result = texture(image, uv).rgb * weights[0];
+    vec4 result = texture(image, uv) * weights[0];
 
     if(horizontal)
     {
         for(int i = 1; i < 5; ++i)
         {
-            result += texture(image, uv + vec2(texel_size.x * i, 0.0)).rgb * weights[i];
-            result += texture(image, uv - vec2(texel_size.x * i, 0.0)).rgb * weights[i];
+            result += texture(image, uv + vec2(texel_size.x * i, 0.0)) * weights[i];
+            result += texture(image, uv - vec2(texel_size.x * i, 0.0)) * weights[i];
         }
     }
     else
     {
         for(int i = 1; i < 5; ++i)
         {
-            result += texture(image, uv + vec2(0.0, texel_size.y * i)).rgb * weights[i];
-            result += texture(image, uv - vec2(0.0, texel_size.y * i)).rgb * weights[i];
+            result += texture(image, uv + vec2(0.0, texel_size.y * i)) * weights[i];
+            result += texture(image, uv - vec2(0.0, texel_size.y * i)) * weights[i];
         }
     }
 
-    frag_colour = vec4(result, 1.0);
+    frag_colour = result;
 }
