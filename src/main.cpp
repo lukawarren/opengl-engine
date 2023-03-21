@@ -80,7 +80,7 @@ int main()
         // Confine rotation
         camera->pitch = std::max(std::min(camera->pitch, 90.0f), -90.0f);
 
-        //chunk_loop(scene, window);
+        chunk_loop(scene, window);
     }
 
     return 0;

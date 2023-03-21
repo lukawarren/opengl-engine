@@ -111,11 +111,23 @@ bool Renderer::update(Scene& scene)
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
     // ...combining FBOs (with HDR pass)
-    composite_pass.render(
-        output,
-        *bloom_pass.get_output().colour_texture,
-        *cloud_pass.output_framebuffer.colour_texture
-    );
+    if (scene.cloud_settings.enabled)
+    {
+        composite_pass.render(
+            output,
+            *bloom_pass.get_output().colour_texture,
+            *cloud_pass.output_framebuffer.colour_texture
+        );
+    }
+    else
+    {
+        // TODO: avoid sampling output twice
+        composite_pass.render(
+            output,
+            *bloom_pass.get_output().colour_texture,
+            output
+        );
+    }
 
     // Sprites
     sprite_pass.render(scene, projection);
