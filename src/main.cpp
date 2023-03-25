@@ -19,7 +19,7 @@ int main()
     glm::vec2 mouse_position = window.mouse_position();
 
     // Seutp scene
-    Scene scene = chunk_scene();
+    Scene scene = sponza_scene();
     auto* camera = &scene.camera;
     double time = glfwGetTime();
 
@@ -80,7 +80,7 @@ int main()
         // Confine rotation
         camera->pitch = std::max(std::min(camera->pitch, 90.0f), -90.0f);
 
-        chunk_loop(scene, window);
+        //chunk_loop(scene, window);
     }
 
     return 0;

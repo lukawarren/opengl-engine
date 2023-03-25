@@ -2,7 +2,13 @@
 #include <stdexcept>
 #include "framebuffer.h"
 
-Framebuffer::Framebuffer(const unsigned int width, const unsigned int height, const DepthSettings depth_settings, const bool is_g_buffer)
+Framebuffer::Framebuffer(
+    const unsigned int width,
+    const unsigned int height,
+    const DepthSettings depth_settings,
+    const bool is_g_buffer,
+    const bool is_single_channel
+)
 {
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -10,13 +16,26 @@ Framebuffer::Framebuffer(const unsigned int width, const unsigned int height, co
     // Add colour attachment (if need be)
     if (depth_settings != DepthSettings::ONLY_DEPTH)
     {
-        this->colour_texture.emplace(
-            width,
-            height,
-            GL_RGBA16F, // HDR
-            GL_RGBA,    // HDR
-            GL_FLOAT    // HDR
-        );
+        if (!is_single_channel)
+        {
+            colour_texture.emplace(
+                width,
+                height,
+                GL_RGBA16F, // HDR
+                GL_RGBA,    // HDR
+                GL_FLOAT    // HDR
+            );
+        }
+        else
+        {
+            colour_texture.emplace(
+                width,
+                height,
+                GL_R16F,
+                GL_RED,
+                GL_FLOAT
+            );
+        }
         glFramebufferTexture2D(
             GL_FRAMEBUFFER,
             GL_COLOR_ATTACHMENT0,
@@ -34,8 +53,10 @@ Framebuffer::Framebuffer(const unsigned int width, const unsigned int height, co
     // If G-buffer, add normal and position textures
     if (is_g_buffer)
     {
-        this->normal_texture.emplace(width, height, GL_RGB32F, GL_RGB, GL_FLOAT);
-        this->position_texture.emplace(width, height, GL_RGB32F, GL_RGB, GL_FLOAT);
+        normal_texture.emplace(width, height, GL_RGB32F, GL_RGB, GL_FLOAT);
+        position_texture.emplace(width, height, GL_RGB32F, GL_RGB, GL_FLOAT);
+        normal_texture->clamp(glm::vec4(0.0f), false);
+        position_texture->clamp(glm::vec4(0.0f), false);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, normal_texture->texture_id, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, position_texture->texture_id, 0);
         unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
@@ -45,7 +66,7 @@ Framebuffer::Framebuffer(const unsigned int width, const unsigned int height, co
     if (depth_settings != DepthSettings::NO_DEPTH)
     {
         // Create depth buffer using *nearest* filtering!
-        this->depth_map.emplace(
+        depth_map.emplace(
             width,
             height,
             GL_DEPTH_COMPONENT24,
@@ -53,12 +74,12 @@ Framebuffer::Framebuffer(const unsigned int width, const unsigned int height, co
             GL_UNSIGNED_INT_24_8,
             true
         );
-        this->depth_map->clamp(glm::vec4(1.0f));
+        depth_map->clamp(glm::vec4(1.0f));
         glFramebufferTexture2D(
             GL_FRAMEBUFFER,
             GL_DEPTH_ATTACHMENT,
             GL_TEXTURE_2D,
-            this->depth_map->texture_id,
+            depth_map->texture_id,
             0
         );
     }

@@ -10,6 +10,7 @@ Renderer::Renderer(const std::string& title, const int width, const int height, 
     render_scale(render_scale),
     g_buffer_pass(render_width(), render_height()),
     lighting_pass(render_width(), render_height()),
+    ao_pass(render_width(), render_height()),
     bloom_pass(render_width() / 2, render_height() / 2),
     cloud_pass(render_width() / 2, render_height() / 2)
 {
@@ -60,9 +61,19 @@ bool Renderer::update(Scene& scene)
     // Fill G-buffer
     g_buffer_pass.render(scene, view, projection);
 
-    // Culling, etc. no longer needed
+    // Culling, etc. no longer needed (but quads from hereon)
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
+    quad_mesh->bind();
+
+    // Ambient occlusion
+    ao_pass.render(
+        *g_buffer_pass.g_buffer.position_texture,
+        *g_buffer_pass.g_buffer.normal_texture,
+        *g_buffer_pass.g_buffer.depth_map,
+        view,
+        projection
+    );
 
     // Lighting
     lighting_pass.render(
@@ -70,6 +81,7 @@ bool Renderer::update(Scene& scene)
         light_projection,
         cloud_pass.noises[0],
         *scene.sun.shadow_buffer->depth_map,
+        *ao_pass.output_framebuffer.colour_texture,
         g_buffer_pass.g_buffer
     );
 

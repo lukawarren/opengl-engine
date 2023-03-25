@@ -24,15 +24,16 @@ private:
     unsigned int render_height() const;
 
     // Render passes
-    GBufferPass     g_buffer_pass;
-    LightingPass    lighting_pass;
-    SkyPass         sky_pass;
-    WaterPass       water_pass;
-    ShadowPass      shadow_pass;
-    BloomPass       bloom_pass;
-    SpritePass      sprite_pass;
-    CloudPass       cloud_pass;
-    CompositePass   composite_pass;
+    GBufferPass             g_buffer_pass;
+    LightingPass            lighting_pass;
+    AmbientOcclusionPass    ao_pass;
+    SkyPass                 sky_pass;
+    WaterPass               water_pass;
+    ShadowPass              shadow_pass;
+    BloomPass               bloom_pass;
+    SpritePass              sprite_pass;
+    CloudPass               cloud_pass;
+    CompositePass           composite_pass;
 
     // Frame state
     bool did_bake_shadows = false;

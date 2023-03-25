@@ -5,7 +5,7 @@ in vec2 out_texture_coord;
 uniform sampler2D g_albedo;
 uniform sampler2D g_normal;
 uniform sampler2D g_position;
-
+uniform sampler2D occlusion;
 uniform sampler2D shadow_map;
 uniform sampler3D cloud_map;
 
@@ -132,14 +132,19 @@ void main()
     vec3 normal = texture(g_normal, out_texture_coord).xyz;
     vec3 position = texture(g_position, out_texture_coord).xyz;
     vec4 lightspace_position = lightspace * vec4(position, 1.0);
+    float occlusion = texture(occlusion, out_texture_coord).r;
+
+    // Ambient lighting
+    occlusion = max(occlusion, 0.5);
+    vec3 ambience = ambient_light * occlusion;
 
     // Diffuse lighting - assume light to be a direction (e.g. the sun and i.e. not a point light)
     vec3 light_direction = normalize(light_position);
     vec3 diffuse = max(dot(normal, light_direction), 0.0) * light_colour;
-    diffuse += ambient_light;
+    diffuse += ambience;
 
     // Shadows
-    float shadow = max(get_shadow(lightspace_position), 0.4);
-    float cloud_shadow = max(get_cloud_shadow(position.xyz), 0.3);
+    float shadow = max(get_shadow(lightspace_position), 0.4 * occlusion);
+    float cloud_shadow = max(get_cloud_shadow(position.xyz), 0.3 * occlusion);
     frag_colour = vec4(albedo, 1.0) * vec4(diffuse, 1.0) * shadow * cloud_shadow;
 }

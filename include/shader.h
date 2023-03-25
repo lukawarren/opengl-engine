@@ -69,6 +69,7 @@ public:\
 
 SHADER(GBufferShader,   "g_buffer",     SHADER_NORMAL)
 SHADER(LightingShader,  "lighting",     SHADER_NORMAL)
+SHADER(SSAOShader,      "ssao",         SHADER_NORMAL)
 SHADER(WaterShader,     "water",        SHADER_NORMAL)
 SHADER(QuadShader,      "quad",         SHADER_NORMAL)
 SHADER(ShadowMapShader, "shadow_map",   SHADER_NORMAL)

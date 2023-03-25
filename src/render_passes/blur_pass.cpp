@@ -7,8 +7,8 @@ BlurPass::BlurPass(const unsigned int width, const unsigned int height) :
         Framebuffer(width, height)
     }
 {
-    framebuffers[0].colour_texture->clamp(glm::vec4(0.0f));
-    framebuffers[1].colour_texture->clamp(glm::vec4(0.0f));
+    framebuffers[0].colour_texture->clamp(glm::vec4(0.0f), false);
+    framebuffers[1].colour_texture->clamp(glm::vec4(0.0f), false);
 }
 
 void BlurPass::render(const std::optional<Texture*> texture, std::optional<Framebuffer*> output)

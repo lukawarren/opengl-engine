@@ -16,7 +16,8 @@ public:
         const unsigned int width,
         const unsigned int height,
         const DepthSettings depth_settings = DepthSettings::NO_DEPTH,
-        const bool is_g_buffer = false
+        const bool is_g_buffer = false,
+        const bool is_single_channel = false
     );
     Framebuffer(const Framebuffer&) = delete;
     ~Framebuffer();

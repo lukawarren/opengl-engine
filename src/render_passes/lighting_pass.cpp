@@ -10,6 +10,7 @@ LightingPass::LightingPass(const unsigned int width, const unsigned int height) 
     shader.set_uniform("g_position", 2);
     shader.set_uniform("cloud_map",  3);
     shader.set_uniform("shadow_map", 4);
+    shader.set_uniform("occlusion",  5);
 }
 
 void LightingPass::render(
@@ -17,11 +18,11 @@ void LightingPass::render(
     const glm::mat4& light_projection,
     const Texture* cloud_noise,
     const Texture& shadow_map,
+    const Texture& ambient_occlusion,
     const Framebuffer& g_buffer
 )
 {
     output_framebuffer.bind();
-    glClear(GL_COLOR_BUFFER_BIT);
 
     // Uniforms
     shader.bind();
@@ -38,7 +39,7 @@ void LightingPass::render(
     g_buffer.position_texture->bind(2);
     cloud_noise->bind(3);
     shadow_map.bind(4);
+    ambient_occlusion.bind(5);
 
-    quad_mesh->bind();
     quad_mesh->draw();
 }

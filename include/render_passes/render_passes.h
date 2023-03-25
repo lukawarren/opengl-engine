@@ -34,6 +34,7 @@ public:
         const glm::mat4& light_projection,
         const Texture* cloud_noise,
         const Texture& shadow_map,
+        const Texture& ambient_occlusion,
         const Framebuffer& g_buffer
     );
     Framebuffer output_framebuffer;
@@ -140,6 +141,25 @@ private:
     CloudShader cloud_shader;
     WorleyShader worley_shader;
     BlurPass blur_pass;
+};
+
+class AmbientOcclusionPass : public RenderPass
+{
+public:
+    AmbientOcclusionPass(const unsigned int width, const unsigned int height);
+    ~AmbientOcclusionPass();
+    void render(
+        const Texture& positions,
+        const Texture& normals,
+        const Texture& depth,
+        const glm::mat4& view,
+        const glm::mat4& projection
+    );
+    Framebuffer output_framebuffer;
+private:
+    BlurPass blur_pass;
+    SSAOShader shader;
+    Texture* noise;
 };
 
 class CompositePass : public RenderPass
