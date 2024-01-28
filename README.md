@@ -1,4 +1,4 @@
-# gl-engine
+# opengl-engine
 An OpenGL game engine written in C++.
 ![Sponza demo scene](screenshots/sponza.png)
 
@@ -32,4 +32,5 @@ ninja
 * [stb_image](https://github.com/nothings/stb/blob/master/stb_image.h)
 * [glad](https://glad.dav1d.de/)
 * [assimp](https://github.com/assimp/assimp)
+  
 Please see project pages for respective licenses.
