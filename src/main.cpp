@@ -10,7 +10,7 @@ void chunk_loop(Scene& scene, const Window& window);
 
 int main()
 {
-    Renderer renderer("lukacraft", width, height, RENDER_SCALE);
+    Renderer renderer("gl", width, height, RENDER_SCALE);
     Window& window = renderer.window;
     window.capture_mouse();
 
@@ -141,24 +141,36 @@ Scene sponza_scene()
     Scene scene =
     {
         .entities = { Entity("sponza/sponza.gltf"), Entity("cube.obj") },
-        .waters = {},
+        .waters = { Water() },
+        .skybox = MAKE_SKYBOX(
+            "skybox/xpos.png",
+            "skybox/xneg.png",
+            "skybox/ypos.png",
+            "skybox/yneg.png",
+            "skybox/zpos.png",
+            "skybox/zneg.png"
+        ),
         .sun = { { 0.18f, 1.0f, 0.3f }, { 255.0 / 255.0, 255.0 / 255.0, 200.0 / 255.0 } },
-        .camera = Camera({ -6.0f, 3.5f, 0.0f }, 30.0f, 90.0f, 0.0f)
+        .camera = Camera({ -6.0f, 3.5f, 0.0f }, 30.0f, 90.0f, 0.0f),
     };
 
     scene.cloud_settings.enabled = false;
 
+    // Lighting
     scene.sun.position *= 20.0f;
     scene.sun.colour *= 2.5f;
 
+    // Position sponza model
     auto* sponza = &scene.entities[0];
     sponza->transform.scale = glm::vec3(0.01f);
     sponza->transform.position.y = -1;
     sponza->transform.position.z = 1;
     sponza->transform.rotation.y = 90;
 
-    auto* cube = &scene.entities[1];
-    cube->transform.position.y = 5;
+    // Water and positioning
+    auto& water = scene.waters[0];
+    water.transform.scale *= 100.0f;
+    water.transform.position = { 0.0f, 0.0f, 0.0f };
 
     return scene;
 }
